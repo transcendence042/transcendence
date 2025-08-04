@@ -1,2 +1,28 @@
+version: '3'
+
 services:
 
+  vault:
+    image: vault:1.13
+    container_name: vault
+    command: server -config=/vault/config/vault.hcl
+    ports:
+      - "8200:8200"
+    volumes:
+      - vlt-volume:/vault/config
+    environment:
+      VAULT_ADDR: ${VAULT_ADDR}
+    networks:
+      - transcendence
+
+volumes:
+  vlt-volume:
+    driver:  local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}/srcs/backend/vault/config
+
+networks:
+  transcendence:
+    driver:  bridge
