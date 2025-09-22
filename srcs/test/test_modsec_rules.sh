@@ -1,147 +1,221 @@
 #!/usr/bin/env bash
 # test_modsec_rules.sh
-# Runs a battery of curl tests to exercise ModSecurity rules we added.
+# Battery of curl tests to exercise your ModSecurity custom rules + CRS.
 #
 # Assumptions:
-# - WAF/Nginx available at http://localhost (port 80)
-# - Endpoints: /, /healthz, /ping, /static/app.js, /api/, /api/upload, /api/login, /api/item
-# - Adjust HOST variable below if different (http://hostname:port)
+# - WAF/Nginx reachable at http://localhost (port 80) unless $HOST overrides
+# - Endpoints present or harmless if 404: /, /healthz, /ping, /static/app.js,
+#   /api/, /api/upload, /api/login, /api/item
 #
-# WARNING: This script will create temporary files (~13MB) to test upload/size rules.
-# Remove or change sizes if disk/bandwidth is constrained.
+# WARNING: This script creates temporary files (~26 MB) for upload/size tests.
+#
+# To launch with a different host/port:
+# HOST=http://127.0.0.1:8080 DEMO_RULE_ID=900901 bash test_modsec_rules.sh
 
 set -euo pipefail
+
 HOST=${HOST:-http://localhost}
+DEMO_RULE_ID=${DEMO_RULE_ID:-900901}   # if you kept 999999, set DEMO_RULE_ID=999999
 TMPDIR=$(mktemp -d)
-CURL="curl -s -o /dev/null -w \"%{http_code}\""
+CURL='curl -s -o /dev/null -w "%{http_code}"'
 
 echo "Temporary dir: $TMPDIR"
-cleanup() {
-  rm -rf "$TMPDIR"
-}
+cleanup() { rm -rf "$TMPDIR"; }
 trap cleanup EXIT
 
+###############################################################################
+# 1) Demo block: keyword 'malicious' (id ${DEMO_RULE_ID})
+###############################################################################
 echo
-echo "1) Demo block (should return 403) — rule 999999"
-resp=$($CURL "$HOST/?q=malicious")
+echo "1) Demo block keyword (should be 403) — rule ${DEMO_RULE_ID}"
+resp=$(eval $CURL "$HOST/?q=malicious")
 echo " -> HTTP $resp"
-[ "$resp" = "403" ] && echo "PASS: demo block" || echo "FAIL: demo block (expected 403)"
+[ "$resp" = "403" ] && echo "PASS" || echo "NOTE: expected 403, got $resp"
 
+###############################################################################
+# 2) Health & ping DetectionOnly (id 900110): should NOT be blocked
+###############################################################################
 echo
-echo "2) Health (/healthz) and ping (/ping) (should NOT be blocked) — rules 900121/900122"
+echo "2) Health (/healthz) and ping (/ping) — should NOT be blocked (DetectionOnly)"
 for path in /healthz /ping; do
-  resp=$($CURL "$HOST${path}")
+  resp=$(eval $CURL "$HOST${path}")
   echo " -> $path -> HTTP $resp"
-  if [ "$resp" = "403" ]; then
-    echo "FAIL: $path blocked (expected not blocked)"
-  else
-    echo "PASS: $path ok (not blocked)"
-  fi
+  [ "$resp" = "403" ] && echo "FAIL: blocked" || echo "PASS"
 done
 
+###############################################################################
+# 3) Static asset — DetectionOnly (not blocked even if CRS would flag)
+###############################################################################
 echo
-echo "3) Static asset (/static/app.js) — DetectionOnly expected (not blocked)"
-resp=$($CURL "$HOST/static/app.js")
+echo "3) Static asset (/static/app.js) — expected not blocked"
+resp=$(eval $CURL "$HOST/static/app.js")
 echo " -> HTTP $resp"
-if [ "$resp" = "403" ]; then echo "FAIL: static asset blocked"; else echo "PASS: static asset served/allowed"; fi
+[ "$resp" = "403" ] && echo "FAIL: blocked" || echo "PASS"
 
+###############################################################################
+# 4) CORS preflight (OPTIONS) — should be allowed
+###############################################################################
 echo
-echo "4) CORS preflight (OPTIONS) — should not be blocked (900123)"
-resp=$($CURL -X OPTIONS -H "Origin: http://example.com" -H "Access-Control-Request-Method: POST" "$HOST/")
+echo "4) CORS preflight (OPTIONS) — should be allowed"
+resp=$(eval $CURL -X OPTIONS -H "Origin: http://example.com" -H "Access-Control-Request-Method: POST" "$HOST/")
 echo " -> HTTP $resp"
-if [ "$resp" = "403" ]; then echo "FAIL: OPTIONS preflight blocked"; else echo "PASS: OPTIONS preflight allowed"; fi
+[ "$resp" = "403" ] && echo "FAIL: blocked" || echo "PASS"
 
+###############################################################################
+# 5) API strict Content-Type — POST text/plain → expect 415 if enforced
+###############################################################################
 echo
-echo "5) API content type enforcement (900210) — POST with text/plain should get 415"
-resp=$($CURL -X POST -H "Content-Type: text/plain" -d '{"x":1}' "$HOST/api/test" )
+echo "5) API Content-Type enforcement — POST text/plain to /api/test"
+resp=$(eval $CURL -X POST -H "Content-Type: text/plain" -d '{"x":1}' "$HOST/api/test")
 echo " -> HTTP $resp"
-[ "$resp" = "415" ] && echo "PASS: API content-type enforced (415)" || echo "NOTE: API content-type not enforced (status $resp)"
+[ "$resp" = "415" ] && echo "PASS (415)" || echo "NOTE: not enforced (status $resp)"
 
+###############################################################################
+# 6) Upload guard — allowed small multipart upload to /api/upload
+###############################################################################
 echo
-echo "6) API upload whitelist (/api/upload) (900211) — multipart allowed; we'll send a small file"
-# create a small test file
+echo "6) Upload guard — allow small multipart upload"
 echo "hello" > "$TMPDIR/small.txt"
-resp=$($CURL -X POST -F "file=@$TMPDIR/small.txt" "$HOST/api/upload")
+resp=$(eval $CURL -X POST -F "file=@$TMPDIR/small.txt" "$HOST/api/upload")
 echo " -> HTTP $resp"
-if [ "$resp" = "403" ]; then echo "FAIL: upload blocked (expected allowed)"; else echo "PASS: upload request returned $resp"; fi
+[ "$resp" = "403" ] && echo "FAIL: blocked" || echo "PASS"
 
+###############################################################################
+# 7) Upload guard — block dangerous extensions & double extensions
+###############################################################################
 echo
-echo "7) Create large test files to exercise max_file_size and combined_file_sizes (uses ~26MB)"
-# file that exceeds single max (13MB)
+echo "7) Upload guard — block dangerous extensions"
+echo "<?php phpinfo();" > "$TMPDIR/evil.php"
+resp=$(eval $CURL -X POST -F "file=@$TMPDIR/evil.php" "$HOST/api/upload")
+echo " -> evil.php -> HTTP $resp"
+[ "$resp" = "403" ] && echo "PASS" || echo "NOTE: expected 403, got $resp"
+
+echo "not really jpeg" > "$TMPDIR/image.jpg.php"
+resp=$(eval $CURL -X POST -F "file=@$TMPDIR/image.jpg.php" "$HOST/api/upload")
+echo " -> image.jpg.php -> HTTP $resp"
+[ "$resp" = "403" ] && echo "PASS" || echo "NOTE: expected 403, got $resp"
+
+###############################################################################
+# 8) Large single body (urlencoded) — expect 413
+###############################################################################
+echo
+echo "8) Large single request body — expect 413"
 dd if=/dev/zero of="$TMPDIR/big1.bin" bs=1M count=13 status=none
-# two files to exceed combined (2x7MB = 14MB). We'll make them 8MB each.
+resp=$(eval $CURL -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-binary @"$TMPDIR/big1.bin" "$HOST/")
+echo " -> HTTP $resp"
+[ "$resp" = "413" ] && echo "PASS" || echo "NOTE: expected 413, got $resp"
+
+###############################################################################
+# 9) Multipart combined size > limit — expect 413
+###############################################################################
+echo
+echo "9) Multipart combined size — expect 413"
 dd if=/dev/zero of="$TMPDIR/fileA.bin" bs=1M count=8 status=none
 dd if=/dev/zero of="$TMPDIR/fileB.bin" bs=1M count=8 status=none
-
-echo "8) POST with very large single body (URLENCODED/Request body length) — expect 413 (900235 or 900236)"
-# Send as raw POST body to root (URL-encoded check path)
-resp=$($CURL -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-binary @"$TMPDIR/big1.bin" "$HOST/")
+resp=$(eval $CURL -X POST -F "a=@$TMPDIR/fileA.bin" -F "b=@$TMPDIR/fileB.bin" "$HOST/api/upload")
 echo " -> HTTP $resp"
-if [ "$resp" = "413" ]; then echo "PASS: large single request blocked (413)"; else echo "NOTE: large single request not blocked (status $resp)"; fi
+[ "$resp" = "413" ] && echo "PASS" || echo "NOTE: expected 413, got $resp"
 
+###############################################################################
+# 10) Too many args (>256) — expect 413
+###############################################################################
 echo
-echo "9) Multipart combined files test — expect 413 if combined size limit enforced"
-resp=$($CURL -X POST -F "a=@$TMPDIR/fileA.bin" -F "b=@$TMPDIR/fileB.bin" "$HOST/api/upload")
-echo " -> HTTP $resp"
-if [ "$resp" = "413" ]; then echo "PASS: combined multipart size blocked (413)"; else echo "NOTE: combined multipart size not blocked (status $resp)"; fi
-
-echo
-echo "10) Too many args (900231) — generate 300 args; expect 413 if threshold=256"
-# generate query string with 300 params
+echo "10) Too many args (>256) — expect 413"
 qs=$(python3 - <<'PY'
 print("&".join([f"a{i}=1" for i in range(300)]))
 PY
 )
-resp=$($CURL "$HOST/?$qs")
+resp=$(eval $CURL "$HOST/?$qs")
 echo " -> HTTP $resp"
-if [ "$resp" = "413" ]; then echo "PASS: too many args blocked (413)"; else echo "NOTE: too many args not blocked (status $resp)"; fi
+[ "$resp" = "413" ] && echo "PASS" || echo "NOTE: expected 413, got $resp"
 
+###############################################################################
+# 11) Arg name too long (>50) — expect 413
+###############################################################################
 echo
-echo "11) Argument name too long (900232) — create a very long param name"
+echo "11) Arg name too long — expect 413"
 longname=$(python3 - <<'PY'
 print("n"+("x"*60))
 PY
 )
-resp=$($CURL "$HOST/?$longname=1")
+resp=$(eval $CURL "$HOST/?$longname=1")
 echo " -> HTTP $resp"
-if [ "$resp" = "413" ]; then echo "PASS: arg name length blocked (413)"; else echo "NOTE: arg name length not blocked (status $resp)"; fi
+[ "$resp" = "413" ] && echo "PASS" || echo "NOTE: expected 413, got $resp"
 
+###############################################################################
+# 12) Arg value too long (>64k) — expect 413
+###############################################################################
 echo
-echo "12) Argument value too long (900233) — value length > 64k"
-# generate >64k payload
+echo "12) Arg value too long — expect 413"
 python3 - <<'PY' > "$TMPDIR/longvalue.txt"
 print("v=" + "A"*70000)
 PY
-resp=$($CURL -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-binary @"$TMPDIR/longvalue.txt" "$HOST/")
+resp=$(eval $CURL -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-binary @"$TMPDIR/longvalue.txt" "$HOST/")
 echo " -> HTTP $resp"
-if [ "$resp" = "413" ]; then echo "PASS: arg value too long blocked (413)"; else echo "NOTE: arg value too long not blocked (status $resp)"; fi
+[ "$resp" = "413" ] && echo "PASS" || echo "NOTE: expected 413, got $resp"
 
+###############################################################################
+# 13) CSRF — POST to /api/item WITHOUT X-CSRF-Token → expect 403
+###############################################################################
 echo
-echo "13) Demo CSRF check (900500) — POST to /api/item without X-CSRF-Token -> expect 403"
-resp=$($CURL -X POST -H "Content-Type: application/json" -d '{"test":1}' "$HOST/api/item")
+echo "13) CSRF — expect 403"
+resp=$(eval $CURL -X POST -H "Content-Type: application/json" -d '{"test":1}' "$HOST/api/item")
 echo " -> HTTP $resp"
-if [ "$resp" = "403" ]; then echo "PASS: CSRF rule blocked (403)"; else echo "NOTE: CSRF rule not blocking (status $resp)"; fi
+[ "$resp" = "403" ] && echo "PASS" || echo "NOTE: expected 403, got $resp)"
 
+###############################################################################
+# 14) Login rate-limit — send 12 POSTs quickly, expect >=1 HTTP 429
+###############################################################################
 echo
-echo "14) Demo login rate-limit (900401/900402) — send 12 quick requests, expect >=1 429"
-echo "Sending 12 requests to /api/login..."
+echo "14) Login rate-limit — 12 POSTs to /api/login"
 count_429=0
 for i in $(seq 1 12); do
-  st=$($CURL "$HOST/api/login")
-  echo -n "$st "
-  if [ "$st" = "429" ]; then count_429=$((count_429+1)); fi
+  st=$(eval $CURL -X POST "$HOST/api/login")
+  printf "%s " "$st"
+  [ "$st" = "429" ] && count_429=$((count_429+1)) || true
 done
 echo
-if [ "$count_429" -gt 0 ]; then echo "PASS: observed $count_429 429 responses (rate-limit)"; else echo "NOTE: no 429 observed (rate-limit may not be enforced)"; fi
+[ "$count_429" -gt 0 ] && echo "PASS: observed $count_429 responses with 429" || echo "NOTE: no 429 observed"
 
+###############################################################################
+# 15) Host header sanity — invalid Host should be 400
+###############################################################################
 echo
-echo "15) Demo block keyword via header matching (999999) - header contains 'malicious'"
-resp=$($CURL -H "X-Test: malicious" "$HOST/")
+echo "15) Host header sanity — invalid Host should be 400"
+resp=$(eval $CURL -H "Host: evil.com" "$HOST/")
 echo " -> HTTP $resp"
-[ "$resp" = "403" ] && echo "PASS: header demo block (403)" || echo "NOTE: header demo block not triggered (status $resp)"
+[ "$resp" = "400" ] && echo "PASS" || echo "NOTE: expected 400, got $resp"
+
+###############################################################################
+# 16) SSRF signals — metadata IP and file:// scheme — expect 403
+###############################################################################
+echo
+echo "16) SSRF checks — expect 403"
+resp=$(eval $CURL "$HOST/?u=http://169.254.169.254/latest/meta-data")
+echo " -> metadata IP -> HTTP $resp"
+[ "$resp" = "403" ] && echo "PASS" || echo "NOTE: expected 403, got $resp"
+
+resp=$(eval $CURL "$HOST/?u=file:///etc/passwd")
+echo " -> file:// scheme -> HTTP $resp"
+[ "$resp" = "403" ] && echo "PASS" || echo "NOTE: expected 403, got $resp"
+
+###############################################################################
+# 17) LFI quick win — path traversal to /etc/passwd — expect 403
+###############################################################################
+echo
+echo "17) LFI quick win — expect 403"
+resp=$(eval $CURL "$HOST/?path=../../etc/passwd")
+echo " -> HTTP $resp"
+[ "$resp" = "403" ] && echo "PASS" || echo "NOTE: expected 403, got $resp"
+
+###############################################################################
+# 18) JSON responses in /api — enforce 406 if policy enabled
+###############################################################################
+echo
+echo "18) JSON response enforcement — expect 406 if enabled"
+resp=$(eval $CURL "$HOST/api/")
+echo " -> HTTP $resp"
+[ "$resp" = "406" ] && echo "PASS (406)" || echo "NOTE: JSON response enforcement not active (status $resp)"
 
 echo
-echo "16) Paranoia Level check — we cannot directly 'see' the TX variables, but if you configured logging,"
-echo "    check WAF logs (modsec audit and error logs) to see 'Paranoia Level set to PL1' messages."
-echo
-echo "All tests done. Cleanup temporary files."
+echo "All tests done. Cleaning up."
