@@ -219,3 +219,60 @@ echo " -> HTTP $resp"
 
 echo
 echo "All tests done. Cleaning up."
+
+###############################################################################
+# 19) Methods in '/' — POST/PUT/DELETE should be 405
+###############################################################################
+echo
+echo "19) Methods in '/' — POST/PUT/DELETE -> expect 405"
+for m in POST PUT DELETE; do
+  resp=$(eval $CURL -X "$m" "$HOST/")
+  echo " -> $m / => HTTP $resp"
+  [ "$resp" = "405" ] && echo "PASS" || echo "NOTE: expected 405, got $resp"
+done
+
+###############################################################################
+# 20) Methods in '/api' (default) — PUT/DELETE should be 405
+###############################################################################
+echo
+echo "20) Methods in '/api' — PUT/DELETE -> expect 405"
+for m in PUT DELETE; do
+  resp=$(eval $CURL -X "$m" -H "Content-Type: application/json" "$HOST/api/test")
+  echo " -> $m /api/test => HTTP $resp"
+  [ "$resp" = "405" ] && echo "PASS" || echo "NOTE: expected 405, got $resp"
+done
+
+###############################################################################
+# 21) Override: /api/profiles — PUT/DELETE should NOT be blocked by WAF
+###############################################################################
+echo
+echo "21) Override /api/profiles — PUT/DELETE should pass-through (not 405/403)"
+for m in PUT DELETE; do
+  resp=$(eval $CURL -X "$m" -H "X-CSRF-Token: t" -H "Content-Type: application/json" -d '{"x":1}' "$HOST/api/profiles")
+  echo " -> $m /api/profiles => HTTP $resp"
+  if [ "$resp" = "405" ] || [ "$resp" = "403" ]; then
+    echo "NOTE: expected pass-through (not 405/403), got $resp"
+  else
+    echo "PASS (not blocked by WAF)"
+  fi
+done
+
+###############################################################################
+# 22) Override: /api/items and /api/items/123 — PUT/DELETE should NOT be blocked
+###############################################################################
+echo
+echo "22) Override /api/items[/123] — PUT/DELETE should pass-through (not 405/403)"
+for endpoint in "/api/items" "/api/items/123"; do
+  for m in PUT DELETE; do
+    resp=$(eval $CURL -X "$m" -H "X-CSRF-Token: t" -H "Content-Type: application/json" -d '{"x":1}' "$HOST$endpoint")
+    echo " -> $m $endpoint => HTTP $resp"
+    if [ "$resp" = "405" ] || [ "$resp" = "403" ]; then
+      echo "NOTE: expected pass-through (not 405/403), got $resp"
+    else
+      echo "PASS (not blocked by WAF)"
+    fi
+  done
+done
+
+echo
+echo "All tests done. Cleaning up."

@@ -90,11 +90,11 @@ services:
     volumes:
       # Config (vault.hcl and certs if use TLS in Vault)
       - type: bind
-        source: ${HOME}/data/vault/config
+        source: ./data/vault/config
         target: /vault/config
       # Data (backend file)        
       - type: bind
-        source: ${HOME}/data/vault/file
+        source: ./data/vault/file
         target: /vault/file     # Vault storage (data)
     networks:
       - transcendence
