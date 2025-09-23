@@ -70,12 +70,10 @@ services:
     restart: unless-stopped
     expose:
       - "3000"
+    environment:
+      VAULT_ADDR: http://vault:8200
     networks:
       - transcendence
-    # If your app uses variables, add them here:
-    # environment:
-    #   NODE_ENV: production
-    #   PORT: "3000"
 
   vault:
     image: vault:1.13
@@ -96,6 +94,7 @@ services:
       - type: bind
         source: ./data/vault/file
         target: /vault/file     # Vault storage (data)
+    command: "server -config=/vault/config/vault.hcl"
     networks:
       - transcendence
 
