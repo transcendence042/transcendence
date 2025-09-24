@@ -59,32 +59,32 @@ services:
         target: /usr/share/nginx/html
         read_only: true
 
-  vault:
-    image: vault:1.13
-    container_name: vault
-    restart: unless-stopped
-    ports:
-        - "8200:8200"
-    cap_add:
-        - IPC_LOCK
-    environment:
-        VAULT_ADDR: "http://0.0.0.0:8200"
-        VAULT_LOCAL_CONFIG: |-
-          {
-            "ui": true,
-            "disable_mlock": true,
-            "listener": [
-              { "tcp": { "address": "0.0.0.0:8200", "tls_disable": 1 } }
-            ],
-            "storage": { "file": { "path": "/vault/file" } },
-            "log_level": "info"
-          }
-    volumes:
-      - ./srcs/data/vault/config:/vault/config
-      - ./srcs/data/vault/file:/vault/file
-    command: ["server -config=/vault/config/vault.hcl"]
-    networks:
-      - transcendence
+#  vault:
+#    image: vault:1.13
+#    container_name: vault
+#    restart: unless-stopped
+#    ports:
+#        - "8200:8200"
+#    cap_add:
+#        - IPC_LOCK
+#    environment:
+#        VAULT_ADDR: "http://0.0.0.0:8200"
+#        VAULT_LOCAL_CONFIG: |-
+#          {
+#            "ui": true,
+#            "disable_mlock": true,
+#            "listener": [
+#              { "tcp": { "address": "0.0.0.0:8200", "tls_disable": 1 } }
+#            ],
+#            "storage": { "file": { "path": "/vault/file" } },
+#            "log_level": "info"
+#          }
+#    volumes:
+#      - ./srcs/data/vault/config:/vault/config
+#      - ./srcs/data/vault/file:/vault/file
+#    command: ["server -config=/vault/config/vault.hcl"]
+#    networks:
+#      - transcendence
 
 networks:
   transcendence:

@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  vault:
+    image: hashicorp/vault:1.13
+    container_name: vault
+    ports:
+      - "8200:8202"
+    restart: unless-stopped
+    cap_add:
+      - IPC_LOCK
+    command: ["server"]             # ← sin -config
+    environment:
+      VAULT_LOCAL_CONFIG: |
+        {
+          "ui": true,
+          "disable_mlock": true,
+          "listener": [
+            { "tcp": { "address": "0.0.0.0:8202", "tls_disable": 1 } }
+          ],
+          "storage": { "file": { "path": "/vault/file" } },
+          "log_level": "info"
+        }
+    volumes:
+      - ./srcs/data/vault/file:/vault/file
+
