@@ -40,7 +40,6 @@ services:
       - ./logs/modsec:/var/log/modsecurity
     depends_on:
       - frontend
-      - api
     networks:
       - transcendence
 
@@ -59,20 +58,6 @@ services:
         source: ./srcs/frontend/dist
         target: /usr/share/nginx/html
         read_only: true
-
-  api:
-    build:
-      context: ./srcs/api
-      dockerfile: Dockerfile
-    image: transcendence-api:local
-    container_name: api
-    restart: unless-stopped
-    expose:
-      - "3000"
-    environment:
-      VAULT_ADDR: http://vault:8200
-    networks:
-      - transcendence
 
   vault:
     image: vault:1.13
