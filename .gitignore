@@ -1,4 +1,5 @@
 secrets/
 *.pem
 *.key
-.env
+.envsrcs/secrets/
+srcs/.env

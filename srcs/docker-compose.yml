@@ -1,5 +1,4 @@
 version: '3'
-
 services:
 
   nginx:
@@ -80,21 +79,25 @@ services:
     container_name: vault
     restart: unless-stopped
     ports:
-      - "8200:8200"
-    environment:
-      VAULT_ADDR: http://0.0.0.0:8200
+        - "8200:8200"
     cap_add:
-      - IPC_LOCK
+        - IPC_LOCK
+    environment:
+        VAULT_ADDR: "http://0.0.0.0:8200"
+        VAULT_LOCAL_CONFIG: |-
+          {
+            "ui": true,
+            "disable_mlock": true,
+            "listener": [
+              { "tcp": { "address": "0.0.0.0:8200", "tls_disable": 1 } }
+            ],
+            "storage": { "file": { "path": "/vault/file" } },
+            "log_level": "info"
+          }
     volumes:
-      # Config (vault.hcl and certs if use TLS in Vault)
-      - type: bind
-        source: ./data/vault/config
-        target: /vault/config
-      # Data (backend file)        
-      - type: bind
-        source: ./data/vault/file
-        target: /vault/file     # Vault storage (data)
-    command: "server -config=/vault/config/vault.hcl"
+      - ./srcs/data/vault/config:/vault/config
+      - ./srcs/data/vault/file:/vault/file
+    command: ["server -config=/vault/config/vault.hcl"]
     networks:
       - transcendence
 
