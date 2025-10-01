@@ -1,0 +1,92 @@
+version: '3'
+services:
+
+  nginx:
+    user: "0:0"
+    image: owasp/modsecurity-crs:nginx
+    container_name: nginx-waf
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "8443:443"
+    cap_add:
+      - NET_BIND_SERVICE
+    volumes:
+#      - ./default.conf:/etc/nginx/conf.d/default.conf
+#      - ./modsecurity.conf:/etc/nginx/modsecurity.conf
+#      - ./owasp-crs:/etc/nginx/modsecurity-crs # Path for rules OWASP CRS
+#    command: [nginx, "-g", "daemon off;"] # Command for init nginx
+      # Nginx
+      - ./srcs/conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./srcs/conf/nginx/certs:/etc/nginx/certs:ro
+      - ./srcs/conf/modsecurity:/etc/modsecurity.d:ro
+      - ./srcs/conf/nginx/templates-empty:/etc/nginx/templates:ro
+      - ./srcs/conf/nginx/entrypoint-empty:/docker-entrypoint.d:ro
+
+      # ModSecurity main 
+      - ./srcs/conf/modsecurity/modsecurity.conf:/etc/modsecurity.d/modsecurity.conf:ro 
+
+      # ModSecurity - CRS Override (Optional, recommended) 
+      - ./srcs/conf/modsecurity/crs-setup.conf:/etc/modsecurity.d/owasp-crs/crs-setup.conf:ro 
+
+      # ModSecurity - Custom rules (if you have them) 
+      - ./srcs/conf/modsecurity/custom-rules:/etc/modsecurity.d/custom-rules:ro 
+
+      # Certs - TLS certificates (if you use real HTTPS) 
+      - ./srcs/conf/certs:/etc/nginx/certs:ro
+
+      # Logs
+      - ./srcs/logs/nginx:/var/log/nginx
+      - ./srcs/logs/modsec:/var/log/modsecurity
+    depends_on:
+      - frontend
+    networks:
+      - transcendence
+
+  # Example of backend (adjust in project)
+  frontend:
+    image: nginxinc/nginx-unprivileged:1.27-alpine
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+    - "8081:8080"
+    networks:
+      - transcendence
+    volumes:
+      - ./srcs/frontend:/usr/share/nginx/html:ro
+      # Your already built statics (vite/webpack) must exist in dist/
+#      - type: bind
+#        source: ./srcs/frontend/dist
+#        target: /usr/share/nginx/html
+#        read_only: true      
+
+  vault:
+    image: hashicorp/vault:1.13
+    container_name: vault
+    restart: unless-stopped
+    ports:
+        - "8200:8200"
+    cap_add:
+        - IPC_LOCK
+    environment:
+        VAULT_ADDR: "http://0.0.0.0:8200"
+        VAULT_LOCAL_CONFIG: |-
+          {
+            "ui": true,
+            "disable_mlock": true,
+            "listener": [
+              { "tcp": { "address": "0.0.0.0:8200", "tls_disable": 1 } }
+            ],
+            "storage": { "file": { "path": "/vault/file" } },
+            "log_level": "info"
+          }
+    volumes:
+      - ./srcs/data/vault/config:/vault/config
+      - ./srcs/data/vault/file:/vault/file
+    command: ["vault", "server", "-config=/vault/config/vault.hcl"]
+    networks:
+      - transcendence
+
+networks:
+  transcendence:
+    driver:  bridge

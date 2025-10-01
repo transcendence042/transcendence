@@ -1,0 +1,7 @@
+secrets/
+*.pem
+*.key
+.envsrcs/secrets/
+srcs/.env
+srcs/secrets/
+srcs/data/vault/file/
