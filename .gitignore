@@ -1,7 +1,17 @@
+# Ignore secrets and environment files
+.env
+srcs/.env
+
+# Ignore secrets folders
 secrets/
+srcs/secrets/
+
+# Ignore Vault data
+srcs/data/vault/file/
+
+# Ignore certificate and key files
 *.pem
 *.key
-.envsrcs/secrets/
-srcs/.env
-srcs/secrets/
-srcs/data/vault/file/
+
+# Ignore VS Code settings
+.vscode/

@@ -1,11 +1,10 @@
-# To execute : bash srcs/scripts/00.init_waf_and_vault.sh (From Transcendence)
-
 #!/usr/bin/env bash
-# Initializes ModSecurity log dirs (inside srcs/) and configures Vault:
-#  - (3) init + unseal + login
-#  - (4) enable KV v2 and write demo secrets
-#  - (5) least-privilege policy
-#  - (6) AppRole (role_id/secret_id saved in repo under srcs/)
+# To execute: bash srcs/scripts/00.init_waf_and_vault.sh (from project root)
+# Initializes ModSecurity log dirs and configures Vault:
+#   - (3) init + unseal + login
+#   - (4) enable KV v2 and write demo secrets
+#   - (5) least-privilege policy
+#   - (6) AppRole (role_id/secret_id saved under srcs/secrets/)
 set -euo pipefail
 
 # ---------- Paths (everything under srcs/) ----------
@@ -22,7 +21,7 @@ VAULT_DATA_DIR="$SRC_DIR/data/vault/file"
 VAULT_HCL="$VAULT_CFG_DIR/vault.hcl"
 
 # ---------- Helpers ----------
-v() { docker compose exec -T vault sh -lc "export VAULT_ADDR=http://127.0.0.1:8200; $*"; }
+v() { docker compose exec -T vault sh -lc "export VAULT_ADDR=https://127.0.0.1:8200; VAULT_SKIP_VERIFY=true; $*"; }
 
 ensure_line_in_file() {
   local line="$1" file="$2"
@@ -40,7 +39,12 @@ if [ ! -f "$VAULT_HCL" ]; then
   cat > "$VAULT_HCL" <<'HCL'
 ui = true
 disable_mlock = true
-listener "tcp" { address = "0.0.0.0:8200"; tls_disable = 1 }
+listener "tcp" {
+  address = "0.0.0.0:8200"
+  tls_disable = 0
+  tls_cert_file = "/vault/certs/fullchain.pem"
+  tls_key_file  = "/vault/certs/privkey.pem"
+}
 storage  "file" { path = "/vault/file" }
 log_level = "info"
 HCL
@@ -55,19 +59,19 @@ ensure_line_in_file "*.key"         "$BASE_DIR/.gitignore"
 ensure_line_in_file "srcs/.env"     "$BASE_DIR/.gitignore"
 
 # ---------- Bring up Vault ----------
-echo "==> Bringing up vault ..."
+echo "==> Bringing up Vault ..."
 docker compose up -d vault || true
 
-# quick health/log hint if config is wrong
+# Quick health/log hint if config is wrong
 sleep 1
 if ! docker compose ps vault | grep -q "Up"; then
   echo "Vault is not Up. Showing last logs:"
   docker compose logs --tail=50 vault || true
-  echo "Fix: ensure docker-compose.yml mounts ./srcs/data/vault/config:/vault/config and ./srcs/data/vault/file:/vault/file"
+  echo "Fix: ensure docker-compose.yml mounts ./srcs/data/vault/config:/vault/config, ./srcs/data/vault/file:/vault/file, and ./srcs/secrets/certs:/vault/certs"
   exit 1
 fi
 
-echo "==> Waiting for vault to respond ..."
+echo "==> Waiting for Vault to respond ..."
 for i in {1..30}; do
   if v "vault status >/dev/null 2>&1"; then break; fi
   sleep 1
@@ -77,7 +81,7 @@ done
 ROOT_TOKEN_FILE="$SECRETS_VAULT_DIR/root_token"
 UNSEAL_KEY_FILE="$SECRETS_VAULT_DIR/unseal_key"
 
-echo "==> Checking if initialized ..."
+echo "==> Checking if Vault is initialized ..."
 if v "vault status -format=json" | grep -q '"initialized":true'; then
   echo "   Already initialized."
 else
