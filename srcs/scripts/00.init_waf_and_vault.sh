@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
 # To execute: bash srcs/scripts/00.init_waf_and_vault.sh (from project root)
-# Initializes ModSecurity log dirs and configures Vault:
-#   - (3) init + unseal + login
-#   - (4) enable KV v2 and write demo secrets
-#   - (5) least-privilege policy
-#   - (6) AppRole (role_id/secret_id saved under srcs/secrets/)
+# Prepares logs, certificates, Vault and AppRole for the Transcendence stack.
+
 set -euo pipefail
 
-# ---------- Paths (everything under srcs/) ----------
-BASE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"     # repo root
+# ---------- Paths ----------
+BASE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 SRC_DIR="$BASE_DIR/srcs"
 
 LOGS_NGX_DIR="$SRC_DIR/logs/nginx"
 LOGS_MODSEC_DIR="$SRC_DIR/logs/modsec"
 SECRETS_VAULT_DIR="$SRC_DIR/secrets/vault"
 SECRETS_APPROLE_DIR="$SRC_DIR/secrets/api-approle"
+CERTS_DIR="$SRC_DIR/secrets/certs"
 
 VAULT_CFG_DIR="$SRC_DIR/data/vault/config"
 VAULT_DATA_DIR="$SRC_DIR/data/vault/file"
@@ -31,10 +29,35 @@ ensure_line_in_file() {
 # ---------- Prepare local folders ----------
 echo "==> Preparing local folders under srcs/ ..."
 mkdir -p "$LOGS_NGX_DIR" "$LOGS_MODSEC_DIR" "$SECRETS_VAULT_DIR" "$SECRETS_APPROLE_DIR" \
-         "$VAULT_CFG_DIR" "$VAULT_DATA_DIR"
+         "$VAULT_CFG_DIR" "$VAULT_DATA_DIR" "$CERTS_DIR"
 chmod -R 775 "$SRC_DIR/logs" || true
 
-# Minimal vault.hcl if missing
+# ---------- Ensure .gitkeep in always-empty folders ----------
+touch "$BASE_DIR/data/vault/file/.gitkeep"
+touch "$BASE_DIR/frontend/dist/.gitkeep"
+touch "$SECRETS_APPROLE_DIR/.gitkeep"
+
+# ---------- Ensure .gitkeep in empty folders ----------
+touch "$SRC_DIR/conf/nginx/entrypoint-empty/.gitkeep"
+touch "$SRC_DIR/conf/nginx/templates-empty/.gitkeep"
+
+# ---------- Ensure ModSecurity log files exist ----------
+touch "$LOGS_MODSEC_DIR/modsec_audit.log" "$LOGS_MODSEC_DIR/modsec_debug.log"
+chmod 666 "$LOGS_MODSEC_DIR/modsec_audit.log" "$LOGS_MODSEC_DIR/modsec_debug.log"
+
+# ---------- Ensure Nginx log files exist ----------
+touch "$LOGS_NGX_DIR/access.log" "$LOGS_NGX_DIR/error.log"
+chmod 666 "$LOGS_NGX_DIR/access.log" "$LOGS_NGX_DIR/error.log"
+
+# ---------- Ensure test certificates (self-signed) ----------
+if [ ! -f "$CERTS_DIR/fullchain.pem" ] || [ ! -f "$CERTS_DIR/privkey.pem" ]; then
+  echo "==> Generating self-signed TLS certificates for localhost ..."
+  openssl req -x509 -newkey rsa:2048 -keyout "$CERTS_DIR/privkey.pem" -out "$CERTS_DIR/fullchain.pem" -days 365 -nodes -subj "/CN=localhost"
+  chmod 600 "$CERTS_DIR/privkey.pem"
+  chmod 644 "$CERTS_DIR/fullchain.pem"
+fi
+
+# ---------- Minimal vault.hcl if missing ----------
 if [ ! -f "$VAULT_HCL" ]; then
   cat > "$VAULT_HCL" <<'HCL'
 ui = true
@@ -62,7 +85,6 @@ ensure_line_in_file "srcs/.env"     "$BASE_DIR/.gitignore"
 echo "==> Bringing up Vault ..."
 docker compose up -d vault || true
 
-# Quick health/log hint if config is wrong
 sleep 1
 if ! docker compose ps vault | grep -q "Up"; then
   echo "Vault is not Up. Showing last logs:"
@@ -112,13 +134,11 @@ v "vault login '$ROOT_TOKEN' >/dev/null"
 echo "==> Enabling KV v2 at 'kv' ..."
 v "vault secrets enable -path=kv kv-v2 || true"
 
-# Optional: read srcs/.env for initial values
 JWT_SECRET_VAL="superjwt"
 DB_PASSWORD_VAL="sup3r_pwd"
 OAUTH_SECRET_VAL="foo_bar_baz"
-if [ -f "$SRC_DIR/.env" ]; then
-  # shellcheck disable=SC1090
-  . "$SRC_DIR/.env"
+if [ -f "$SRC_DIR/secrets/.env" ]; then
+  . "$SRC_DIR/secrets/.env"
   JWT_SECRET_VAL="${JWT_SECRET:-$JWT_SECRET_VAL}"
   DB_PASSWORD_VAL="${DB_PASSWORD:-$DB_PASSWORD_VAL}"
   OAUTH_SECRET_VAL="${OAUTH_CLIENT_SECRET:-$OAUTH_SECRET_VAL}"
@@ -149,7 +169,8 @@ printf "%s" "$SECRET_ID" > "$SECRETS_APPROLE_DIR/secret_id"
 echo
 echo "===================================================================="
 echo "✅ Done."
-echo "  Logs (ModSec):      $LOGS_NGX_DIR  |  $LOGS_MODSEC_DIR"
+echo "  Logs (Nginx):       $LOGS_NGX_DIR"
+echo "  Logs (ModSec):      $LOGS_MODSEC_DIR"
 echo "  Vault root token:   $ROOT_TOKEN_FILE"
 echo "  Vault unseal key:   $UNSEAL_KEY_FILE"
 echo "  AppRole files:      $SECRETS_APPROLE_DIR/role_id, secret_id"

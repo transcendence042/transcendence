@@ -1,30 +1,40 @@
 #!/usr/bin/env bash
-# test_modsec_rules.sh
-# Comprehensive battery of curl tests for ModSecurity custom rules + CRS (OWASP Top 10).
+# 99.test_modsec_rules.sh
+# Comprehensive battery of curl tests for ModSecurity custom rules and OWASP CRS (OWASP Top 10).
 #
 # Usage:
-#   HOST=http://127.0.0.1:8080 DEMO_RULE_ID=900901 bash 99.test_modsec_rules.sh
+#   HOST=https://localhost:8443 bash srcs/scripts/99.test_modsec_rules.sh
+#
+# Requirements: curl, python3
 
 set -euo pipefail
 
-HOST=${HOST:-http://localhost}
-DEMO_RULE_ID=${DEMO_RULE_ID:-900901}
-TMPDIR=$(mktemp -d)
-CURL='curl -s -o /dev/null -w "%{http_code}"'
+# ----------- Configuration -----------
+HOST="${HOST:-https://localhost:8443}"
+TMPDIR="$(mktemp -d)"
+CURL='curl -sk -o /dev/null -w "%{http_code}"'
 
 echo "Temporary dir: $TMPDIR"
 cleanup() { rm -rf "$TMPDIR"; }
 trap cleanup EXIT
 
-# Helper for test output
+# ----------- Dependency checks -----------
+for bin in curl python3; do
+  if ! command -v $bin >/dev/null 2>&1; then
+    echo "❌ $bin is required but not installed."
+    exit 1
+  fi
+done
+
+# ----------- Helper for test output -----------
 test_case() {
   local desc="$1"
   local expected="$2"
   local code="$3"
   if [ "$code" = "$expected" ]; then
-    echo "PASS: $desc (HTTP $code)"
+    echo "✅ PASS: $desc (HTTP $code)"
   else
-    echo "FAIL: $desc (expected $expected, got $code)"
+    echo "❌ FAIL: $desc (expected $expected, got $code)"
   fi
 }
 
@@ -53,9 +63,9 @@ echo
 echo "3) Static asset (/static/app.js) — expect 200 or 404"
 resp=$(eval $CURL "$HOST/static/app.js")
 if [ "$resp" = "200" ] || [ "$resp" = "404" ]; then
-  echo "PASS: Static asset (HTTP $resp)"
+  echo "✅ PASS: Static asset (HTTP $resp)"
 else
-  echo "FAIL: Static asset (HTTP $resp)"
+  echo "❌ FAIL: Static asset (HTTP $resp)"
 fi
 
 ###############################################################################
@@ -73,9 +83,9 @@ echo
 echo "5) API Content-Type enforcement — POST text/plain to /api/test"
 resp=$(eval $CURL -X POST -H "Content-Type: text/plain" -d '{"x":1}' "$HOST/api/test")
 if [ "$resp" = "415" ]; then
-  echo "PASS (415)"
+  echo "✅ PASS (415)"
 else
-  echo "NOTE: not enforced (status $resp)"
+  echo "ℹ️ NOTE: not enforced (status $resp)"
 fi
 
 ###############################################################################
@@ -86,9 +96,9 @@ echo "6) Upload guard — allow small multipart upload"
 echo "hello" > "$TMPDIR/small.txt"
 resp=$(eval $CURL -X POST -F "file=@$TMPDIR/small.txt" "$HOST/api/upload")
 if [ "$resp" = "403" ]; then
-  echo "FAIL: blocked"
+  echo "❌ FAIL: blocked"
 else
-  echo "PASS"
+  echo "✅ PASS"
 fi
 
 ###############################################################################
@@ -179,9 +189,9 @@ for i in $(seq 1 12); do
 done
 echo
 if [ "$count_429" -gt 0 ]; then
-  echo "PASS: observed $count_429 responses with 429"
+  echo "✅ PASS: observed $count_429 responses with 429"
 else
-  echo "FAIL: no 429 observed"
+  echo "❌ FAIL: no 429 observed"
 fi
 
 ###############################################################################
@@ -218,9 +228,9 @@ echo
 echo "18) JSON response enforcement — expect 406 if enabled"
 resp=$(eval $CURL "$HOST/api/")
 if [ "$resp" = "406" ]; then
-  echo "PASS (406)"
+  echo "✅ PASS (406)"
 else
-  echo "NOTE: JSON response enforcement not active (status $resp)"
+  echo "ℹ️ NOTE: JSON response enforcement not active (status $resp)"
 fi
 
 ###############################################################################
@@ -251,9 +261,9 @@ echo "21) Override /api/profiles — PUT/DELETE should pass-through (not 405/403
 for m in PUT DELETE; do
   resp=$(eval $CURL -X "$m" -H "X-CSRF-Token: t" -H "Content-Type: application/json" -d '{"x":1}' "$HOST/api/profiles")
   if [ "$resp" = "405" ] || [ "$resp" = "403" ]; then
-    echo "FAIL: expected pass-through (not 405/403), got $resp"
+    echo "❌ FAIL: expected pass-through (not 405/403), got $resp"
   else
-    echo "PASS (not blocked by WAF)"
+    echo "✅ PASS (not blocked by WAF)"
   fi
 done
 
@@ -266,9 +276,9 @@ for endpoint in "/api/items" "/api/items/123"; do
   for m in PUT DELETE; do
     resp=$(eval $CURL -X "$m" -H "X-CSRF-Token: t" -H "Content-Type: application/json" -d '{"x":1}' "$HOST$endpoint")
     if [ "$resp" = "405" ] || [ "$resp" = "403" ]; then
-      echo "FAIL: expected pass-through (not 405/403), got $resp"
+      echo "❌ FAIL: expected pass-through (not 405/403), got $resp"
     else
-      echo "PASS (not blocked by WAF)"
+      echo "✅ PASS (not blocked by WAF)"
     fi
   done
 done

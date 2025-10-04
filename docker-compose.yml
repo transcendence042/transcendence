@@ -1,5 +1,27 @@
-version: '3'
+#version: "3.8"
+
 services:
+  frontend:
+    image: nginxinc/nginx-unprivileged:1.27-alpine
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+    - "8081:8080"
+    networks:
+      - transcendence
+    volumes:
+      - ./srcs/frontend:/usr/share/nginx/html:ro
+
+  backend:
+      build: ./srcs/backend
+      container_name: backend
+      restart: unless-stopped
+      networks:
+        - transcendence
+      ports:
+        - "3000:3000"
+      volumes:
+      - ./srcs/secrets:/app/secrets
 
   nginx:    
     image: owasp/modsecurity-crs:nginx
@@ -26,26 +48,17 @@ services:
       # ModSecurity - Custom rules
       - ./srcs/conf/modsecurity/custom-rules:/etc/modsecurity.d/custom-rules:ro 
       # Certs - TLS certificates (if you use real HTTPS) 
-      - ./srcs/secrets/certs:/etc/nginx/certs:ro
+      - ./srcs/secrets/certs:/srcs/secrets/certs:ro
       # Logs
       - ./srcs/logs/nginx:/var/log/nginx
-      - ./srcs/logs/modsec:/var/log/modsecurity
+      - ./srcs/logs/modsec:/srcs/logs/modsec
+      - /srcs/scripts:/scripts:ro
     depends_on:
       - frontend
+      - backend
     networks:
-      - transcendence
+      - transcendence  
   
-  frontend:
-    image: nginxinc/nginx-unprivileged:1.27-alpine
-    container_name: frontend
-    restart: unless-stopped
-    ports:
-    - "8081:8080"
-    networks:
-      - transcendence
-    volumes:
-      - ./srcs/frontend:/usr/share/nginx/html:ro
-
   vault:
     image: hashicorp/vault:1.13
     container_name: vault
@@ -73,6 +86,7 @@ services:
       - ./srcs/data/vault/file:/vault/file
       # Certs - TLS certificates for Vault HTTPS
       - ./srcs/secrets/certs:/vault/certs:ro
+      - ./srcs/scripts:/scripts:ro
     command: ["vault", "server", "-config=/vault/config/vault.hcl"]
     networks:
       - transcendence
