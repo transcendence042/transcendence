@@ -13,5 +13,21 @@
 #*.pem
 #*.key
 
+# Node modules (si usas Node.js)
+#node_modules/
+
+# Archivos temporales de sistema
+#*.swp
+#*.swo
+#*.tmp
+
+# Archivos de log generados en desarrollo
+#*.log
+
+
 # Ignore VS Code settings
-.vscode/srcs/secrets/
+.vscode
+
+# Vault runtime data
+srcs/data/vault/file/
+srcs/data/vault/file.RUNTIME/
