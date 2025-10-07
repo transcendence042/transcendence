@@ -54,10 +54,11 @@ services:
       # ModSecurity - Custom rules
       - ./srcs/conf/modsecurity/custom-rules:/etc/modsecurity.d/custom-rules:ro 
       # Certs - TLS certificates (if you use real HTTPS) 
-      - ./srcs/secrets/certs:/srcs/secrets/certs:ro
-      - ./srcs/secrets:/app/secrets:ro
+      #- ./srcs/secrets/certs:/srcs/secrets/certs:ro
+      - ./srcs/secrets:/srcs/secrets:ro
       # Logs
-      - ./srcs/logs/nginx:/var/log/nginx
+      - ./srcs/logs/nginx/error.log:/srcs/logs/nginx/error.log
+      - ./srcs/logs/nginx/access.log:/srcs/logs/nginx/access.log
       - ./srcs/logs/modsec:/srcs/logs/modsec
       - ./srcs/scripts:/scripts:ro
     depends_on:

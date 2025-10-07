@@ -1,23 +1,22 @@
 #!/usr/bin/env sh
-# filepath: /mnt/c/users/usuario/desktop/Transcendence/srcs/scripts/03.test_vault_secrets_from_container.sh
 
 set -e
 
-VAULT_ADDR="https://vault:8200"
+VAULT_ADDR="https://localhost:8200"
 
-# Rutas correctas según docker-compose.yml
-ROLE_FILE="/app/secrets/api-approle/role_id"
-SECRET_FILE="/app/secrets/api-approle/secret_id"
-UNSEAL_KEY_FILE="/app/secrets/vault/unseal_key"
-ROOT_TOKEN_FILE="/app/secrets/vault/root_token"
-CERT_DIR="/app/secrets/certs"
+# Rutas locales
+ROLE_FILE="srcs/secrets/api-approle/role_id"
+SECRET_FILE="srcs/secrets/api-approle/secret_id"
+UNSEAL_KEY_FILE="srcs/secrets/vault/unseal_key"
+ROOT_TOKEN_FILE="srcs/secrets/vault/root_token"
+CERT_DIR="srcs/secrets/certs"
 
 # Verificar que los archivos necesarios existen
 for f in "$ROLE_FILE" "$SECRET_FILE" "$UNSEAL_KEY_FILE"; do
   if [ ! -f "$f" ]; then
     echo "❌ Missing $f."
-    echo "Available files in /app/secrets/:"
-    ls -la /app/secrets/ 2>/dev/null || echo "Directory not found"
+    echo "Available files in srcs/secrets/:"
+    ls -la srcs/secrets/ 2>/dev/null || echo "Directory not found"
     exit 1
   fi
 done
@@ -67,7 +66,7 @@ else
 fi
 
 echo
-echo "✅ Secrets from Vault (AppRole from container):"
+echo "✅ Secrets from Vault (AppRole from local):"
 echo "JWT_SECRET=$JWT_SECRET"
 echo "DB_PASSWORD=$DB_PASSWORD"
 echo "OAUTH_CLIENT_SECRET=$OAUTH_SECRET"
