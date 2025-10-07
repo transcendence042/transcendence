@@ -28,10 +28,12 @@ export function AuthContextProvider({children}) {
                     setUsername(data.username)
                     setAllow(true)
                 } else {
+                    setAllow(false);
                     console.log("token is invalid");
                 }
 
             } catch {
+                setAllow(false);
                 console.log("token is invalid");
             } finally {
                 setLoading(false)

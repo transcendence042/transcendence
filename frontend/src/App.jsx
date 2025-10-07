@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BrowserRouter, Routes, Router, Navigate, Link, Route, useNavigate} from 'react-router-dom'
 import { AuthContextProvider, AuthContext } from './Context/AuthContext'
 
+import ProtectorOfThings from './middleWare/middleWare'
 import Game from './Components/Game'
 import Index from './Components/Index'
 import Logout  from './Components/Logout'
@@ -60,7 +61,9 @@ function MainComponent() {
     <Routes>
       <Route path='/login' element={<Login/>}/>
       <Route path='/index/*' element={
-        <Components/>
+        <ProtectorOfThings>
+          <Components/>
+        </ProtectorOfThings>
       }
       />
       <Route path='*' element={<Navigate to={'/login/'}/>}/>

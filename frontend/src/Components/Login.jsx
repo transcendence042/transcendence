@@ -1,9 +1,35 @@
 import { useContext, useState } from "react"
 import { AuthContextProvider, AuthContext } from "../Context/AuthContext"
+import { useNavigate } from "react-router-dom"
 
 const RegisterForm = () => {
 
-    const handleRegister = () => {
+    const handleRegister = async (e) => {
+        const form = new FormData(e.target);
+        const data = {
+            username: form.get("username"),
+            email: form.get("email"),
+            displayName: form.get("displayName"),
+            password: form.get("password"),
+        };
+
+        try {
+            const res = await fetch("http://localhost:3000/api/auth/register", {
+                method: 'POST',
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: new URLSearchParams(data),
+            });
+            if (res.ok) {
+                alert("Registration succesfully! You now can login");
+
+            } else {
+                alert(result.error || "Registration failes")
+            }
+
+        } catch (err) {
+            alert("Conection Error: " + err.message)
+        }
+
 
     }
 
@@ -12,23 +38,43 @@ return (
             <h1 className="text-xl font-semibold text-gray-800">Register</h1>
             <div className="mt-3">
                 <h2 className="py-2">Username:</h2>
-                <input type="text" className="w-full border-2 p-3 rounded-md mb-4" placeholder="username..." required/>
+                <input name="username" type="text" className="w-full border-2 p-3 rounded-md mb-4" placeholder="username..." required/>
                  <h2 className="py-2">Email (optional):</h2>
-                <input className="w-full border-2 p-3 rounded-md mb-4" placeholder="Email"/>
+                <input name="email" className="w-full border-2 p-3 rounded-md mb-4" placeholder="Email"/>
                 <h2 className="py-2">Display Name (optional):</h2>
-                <input className="w-full border-2 p-3 rounded-md mb-4" placeholder="DisplayName"/>
+                <input name="displayName" className="w-full border-2 p-3 rounded-md mb-4" placeholder="DisplayName"/>
                 <h2 className="p-2">Password:</h2>
-                <input type="password" className="w-full border-2 p-3 rounded-md mb-10" placeholder="Password..." required/>
+                <input name="password" type="password" className="w-full border-2 p-3 rounded-md mb-10" placeholder="Password..." required/>
             </div>
             <button className="text-xl mb-4 bg-indigo-600 p-3 rounded-md text-white hover:bg-indigo-700">Register</button>
         </form>
 )
 }
 
-const LoginForm = () => {
+const LoginForm = ({setToken}) => {
 
-    const handleLogin = () => {
+    const handleLogin = async (e) => {
+        const form = new FormData(e.target);
+        const data = {
+            username: form.get("username"),
+            password: form.get("password"),
+        };
+        try {
+            const res = await fetch('http://localhost:3000/api/auth/login', {
+                method: 'POST',
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: new URLSearchParams(data),
+            });
+            if (res.ok) {
+                const result = await res.json();
+                setToken(result.token);
+            } else {
+                alert("Login failed");
+            }
 
+        } catch (err) {
+            alert(err.msg);
+        }
     }
 
     return (
@@ -37,9 +83,9 @@ const LoginForm = () => {
             <h1 className="text-xl font-semibold text-gray-800">Login</h1>
             <div className="mt-3">
                 <h2 className="py-2">Username:</h2>
-                <input type="text" className="w-full border-2 p-3 rounded-md mb-4" placeholder="username..." required/>
+                <input name="username" type="text" className="w-full border-2 p-3 rounded-md mb-4" placeholder="username..." required/>
                 <h2 className="p-2">Password:</h2>
-                <input type="password" className="w-full border-2 p-3 rounded-md mb-10" placeholder="Password..." required/>
+                <input name="password" type="password" className="w-full border-2 p-3 rounded-md mb-10" placeholder="Password..." required/>
             </div>
             <button className="text-xl bg-indigo-600 p-3 rounded-md text-white hover:bg-indigo-700">Login</button>
         </form>
@@ -63,7 +109,7 @@ const LoginForm = () => {
 }
 
 const Login = () => {
-    const {user, setUser, token, setToken, setAllow} = useContext(AuthContext);
+    const {username, setUsername, token, setToken} = useContext(AuthContext);
     const [form, setForm] = useState('loginForm');
 
     return (
@@ -85,7 +131,7 @@ const Login = () => {
                         Register
                     </button>
                 </div>
-                {form === 'loginForm' && <LoginForm/>}
+                {form === 'loginForm' && <LoginForm setToken={setToken} setUsername={setUsername}/>}
                 {form === 'registerForm' && <RegisterForm/>}
             </div>
         </div>
