@@ -1,22 +1,15 @@
 import { useContext, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { Navigate } from "react-router-dom"
 import { AuthContext } from "../Context/AuthContext"
 
-const ProtectorOfThings = () => {
-    
-const navigate = useNavigate({childre});
+const ProtectorOfThings = ({children}) => {
+    const {user, loading} = useContext(AuthContext);
 
-    const {allow} = useContext(AuthContext);
-    useEffect(() => {
-        if (allow) {
-            navigate("/index/")
-        } else {
-            navigate("/login/")
-        }
-    }, [allow])
-    return (
-        <></>
-    )
+    if (loading) {
+        return <p>...is Loading</p>
+    }
+    
+    return user ? children : <Navigate to='/login'/>
 }
 
 export default ProtectorOfThings

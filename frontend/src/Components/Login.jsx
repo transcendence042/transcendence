@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 const RegisterForm = () => {
 
     const handleRegister = async (e) => {
+        e.preventDefault();
         const form = new FormData(e.target);
         const data = {
             username: form.get("username"),
@@ -20,17 +21,15 @@ const RegisterForm = () => {
                 body: new URLSearchParams(data),
             });
             if (res.ok) {
-                alert("Registration succesfully! You now can login");
-
+                alert("Registration successfully! You can now login");
             } else {
-                alert(result.error || "Registration failes")
+                const result = await res.json();
+                alert(result.error || "Registration failed");
             }
 
         } catch (err) {
-            alert("Conection Error: " + err.message)
+            alert("Connection Error: " + err.message);
         }
-
-
     }
 
 return (
@@ -51,9 +50,13 @@ return (
 )
 }
 
-const LoginForm = ({setToken}) => {
+const LoginForm = ({setToken, setLoading}) => {
+
+    const navigate = useNavigate();
 
     const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoading(true);
         const form = new FormData(e.target);
         const data = {
             username: form.get("username"),
@@ -67,13 +70,16 @@ const LoginForm = ({setToken}) => {
             });
             if (res.ok) {
                 const result = await res.json();
+                localStorage.setItem('token', result.token)
                 setToken(result.token);
+                navigate('/index')
             } else {
-                alert("Login failed");
+                const result = await res.json();
+                alert(result.error || "Login failed");
             }
 
         } catch (err) {
-            alert(err.msg);
+            alert("Connection Error: " + err.message);
         }
     }
 
@@ -109,7 +115,7 @@ const LoginForm = ({setToken}) => {
 }
 
 const Login = () => {
-    const {username, setUsername, token, setToken} = useContext(AuthContext);
+    const {setToken, setLoading} = useContext(AuthContext);
     const [form, setForm] = useState('loginForm');
 
     return (
@@ -131,7 +137,7 @@ const Login = () => {
                         Register
                     </button>
                 </div>
-                {form === 'loginForm' && <LoginForm setToken={setToken} setUsername={setUsername}/>}
+                {form === 'loginForm' && <LoginForm setToken={setToken} setLoading={setLoading}/>}
                 {form === 'registerForm' && <RegisterForm/>}
             </div>
         </div>
