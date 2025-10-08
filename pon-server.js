@@ -39,7 +39,9 @@ const __dirname = path.dirname(__filename);
 const app = fastify({ logger: true });
 
 // Register plugins
-await app.register(cors, { origin: '*' });
+await app.register(cors, { origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+ });
 await app.register(formBody);
 await app.register(jwt, { secret: 'supersecretkey' }); // TODO: .env
 

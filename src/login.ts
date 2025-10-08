@@ -92,7 +92,7 @@ async function register(event?: SubmitEvent): Promise<void> {
 			password: (formData.get('password') as string) || ""
 		};
 
-		if (!isValidPassword(userData.password)) {
+		if (isValidPassword(userData.password)) {
 			alert("Password must have at least one lowercase letter, one eppercase letter, one number, one special character, and at least 8 characters");
 			if (event) (event.target as HTMLFormElement).reset();
 			return ;
