@@ -37,23 +37,23 @@ const Components = () => {
             <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/logout')}>logout</button>
           </nav>
 
-          <div className='w-full'>
-            <div className=' bg-gray-800 h-16 flex items-center '>
-              <div className='px-96 flex'>
+          <div className='flex-1 min-w-0'>
+            <div className='bg-gray-800 h-16 flex items-center justify-between px-4 md:px-8 gap-4'>
+              <div className='flex flex-1 max-w-md'>
                 <FaSearch className='bg-white/95 w-7 h-8 px-2 rounded-l-md flex justify-center items-center'/>
-                <input value={inputSearch} onChange={(e) => setInputSearch(e.target.value)} placeholder='search...' className='w-96 h-8 p-2 text-xs rounded-r-md focus:outline-none focus:border-transparent'/>
+                <input value={inputSearch} onChange={(e) => setInputSearch(e.target.value)} placeholder='search...' className='flex-1 h-8 p-2 text-xs rounded-r-md focus:outline-none focus:border-transparent'/>
               </div>
-              <button className='relative ml-96'>
+              <button className='relative flex-shrink-0'>
                   <FaBell size={28} className=''/>
                   {
-                    count > 0 &&  (<span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4">
+                    count > 0 &&  (<span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                     {count}
                 </span>)
                   }
               </button>
               
             </div>
-            <div className='mt-6 text-white'>
+            <div className='mt-6 text-white px-4'>
               <Routes>
                 <Route index element={<Index/>}/>
                 <Route path='profile' element={<Profile/>}/>

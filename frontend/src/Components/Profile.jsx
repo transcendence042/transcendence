@@ -166,7 +166,7 @@ const Profile = () => {
 
     return (
 
-            <div className="flex-1 overflow-y-auto max-w-4xl mx-auto w-full">
+            <div className="flex-1 overflow-y-auto max-w-4xl mx-auto w-full m-4">
 
                 {/* Profile Section */}
                 <section>

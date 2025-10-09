@@ -120,7 +120,7 @@ const Login = () => {
 
     return (
         <div className="bg-gradient-to-br from-indigo-400 via-indigo-500 to-purple-500 min-h-screen flex justify-center items-center">
-            <div className="bg-white flex flex-col justify-center w-3/12 rounded-lg px-8 py-6">
+            <div className="bg-white flex flex-col justify-center w-full max-w-md rounded-lg px-8 py-6">
                 <h1 className="flex justify-center text-3xl font-sans mb-6 font-bold">Authentication 🔒</h1>
                 <div className="flex justify-center py-4 mb-5">
                     <button
