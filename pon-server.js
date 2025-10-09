@@ -410,6 +410,8 @@ io.on("connection", (socket) => {
     // Handle disconnect
     socket.on("disconnect", () => {
         //onlineUsers.delete(userId);
+        console.log("❌ Player disconnected:", socket.user.username, socket.user.id);
+        app.onlineUsers.delete(socket.user.id);
 		const roomId = socket.roomId;
 		if (!roomId || !gameRooms[roomId]) return;
 

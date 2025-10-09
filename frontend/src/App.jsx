@@ -2,12 +2,17 @@ import { useState } from 'react'
 import { BrowserRouter, Routes, Router, Navigate, Link, Route, useNavigate} from 'react-router-dom'
 import { AuthContextProvider, AuthContext } from './Context/AuthContext'
 
+import { FaBell, FaSearch } from 'react-icons/fa'
+
 import ProtectorOfThings from './middleWare/middleWare'
 import Game from './Components/Game'
 import Index from './Components/Index'
 import Logout  from './Components/Logout'
 import Profile from './Components/Profile'
 import Settings from './Components/Settings'
+
+import FriendRequest from './Components/FriendsRequest'
+
 
 import Login from './Components/Login'
 
@@ -16,30 +21,43 @@ import './index.css'
 const Components = () => {
 
   const navigate = useNavigate()
+  const [inputSearch, setInputSearch] = useState('');
+  const [count, setCount] = useState(0);
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-400 via-indigo-500 to-purple-600">
+      <div className="min-h-screen bg-gray-900">
         <div className='flex'>
-          <nav className='flex flex-col top-0 left-0 w-24 min-h-screen bg-slate-700'>
-            <button className='w-24 h-14 flex justify-center items-center text-lg border-[1] border-white' onClick={() => navigate('/index')}>42</button>
-            <button className='w-24 h-14' onClick={() => navigate('/index/game')}>game</button>
-            <button className='w-24 h-14' onClick={() => navigate('/index/profile')}>porfile</button>
-            <button className='w-24 h-14' onClick={() => navigate('/index/settings')}>settings</button>
-            <button className='w-24 h-14' onClick={() => navigate('/index/logout')}>logout</button>
+          <nav className='flex flex-col top-0 left-0 w-28 min-h-screen bg-gray-800 text-white'>
+            <button className='w-28 h-16 flex justify-center items-center text-3xl border-[1] border-white hover:bg-gray-900' onClick={() => navigate('/index')}>42</button>
+            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/game')}>game</button>
+            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/profile')}>porfile</button>
+            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/friendRequest')}>Friends Request </button>
+            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/settings')}>settings</button>
+            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/logout')}>logout</button>
           </nav>
 
           <div className='w-full'>
-            <div className='top-0 left-14 bg-white/80 h-14 flex items-center '>
-              <div className='px-10 flex'>
-                <div className=' bg-white h-6 rounded-l-md'>🔍</div>
-                <input placeholder='search...' className='w-64 h-6 flex items-center justify-center p-2 text-xs rounded-r-md focus:outline-none focus:ring-0 focus:border-transparent'></input>
+            <div className=' bg-gray-800 h-16 flex items-center '>
+              <div className='px-96 flex'>
+                <FaSearch className='bg-white/95 w-7 h-8 px-2 rounded-l-md flex justify-center items-center'/>
+                <input value={inputSearch} onChange={(e) => setInputSearch(e.target.value)} placeholder='search...' className='w-96 h-8 p-2 text-xs rounded-r-md focus:outline-none focus:border-transparent'/>
               </div>
+              <button className='relative ml-96'>
+                  <FaBell size={28} className=''/>
+                  {
+                    count > 0 &&  (<span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-4 h-4">
+                    {count}
+                </span>)
+                  }
+              </button>
+              
             </div>
-            <div className='top-24 left-14 h-5/6 m-5 mt-12'>
+            <div className='mt-6 text-white'>
               <Routes>
                 <Route index element={<Index/>}/>
                 <Route path='profile' element={<Profile/>}/>
+                <Route path='friendRequest' element={<FriendRequest/>} />
                 <Route path='game' element={<Game/>}/>
                 <Route path='settings' element={<Settings/>}/>
                 <Route path='logout' element={<Logout/>}/>
@@ -50,8 +68,6 @@ const Components = () => {
 
         </div>
       </div>
-    
-      {/*Components*/}
     </>
   )
 }

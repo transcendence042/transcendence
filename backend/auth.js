@@ -267,10 +267,12 @@ export async function getFriendRequests(req, reply) {
       ],
       order: [['createdAt', 'DESC']],
       limit: 20
-    })
+    });
+    
     reply.send({friendRequest});
   }
   catch (error) {
+    console.error('getFriendRequests error:', error);
     reply.code(500).send({ error: 'Failed to get friend-Requests' });
   }
 }
