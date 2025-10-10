@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../Context/AuthContext';
 
 const Profile = () => {
-    const { token} = useContext(AuthContext);
+    const { token, language, lan} = useContext(AuthContext);
     const [profile, setProfile] = useState({
         username: '',
         displayName: '',
@@ -170,7 +170,7 @@ const Profile = () => {
 
                 {/* Profile Section */}
                 <section>
-                    <h2 className="text-3xl font-bold text-pong-green mb-6">My Profile</h2>
+                    <h2 className="text-3xl font-bold text-pong-green mb-6">{language[lan].ProfileWelcome}</h2>
                     <div className="bg-gray-800 border border-gray-700 rounded-lg p-5 flex flex-col md:flex-row gap-8 shadow">
                         
                         {/* Avatar + Actions */}
@@ -191,38 +191,38 @@ const Profile = () => {
                                 onClick={() => document.getElementById('avatarInput').click()} 
                                 className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg mt-4 transition"
                             >
-                                Change Avatar
+                                {language[lan].changeAvatar}
                             </button>
                             <button 
                                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg mt-4 transition"
                             >
-                                Change Password
+                                {language[lan].changePassword}
                             </button>
                         </div>
 
                         {/* Profile Info */}
                         <div className="flex-1 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Username:</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">{language[lan].profileUsername}</label>
                                 <span className="text-lg font-semibold">{profile.username}</span>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Display Name:</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">{language[lan].profileDisplayName}</label>
                                 <input 
                                     type="text" 
                                     value={profile.displayName}
                                     onChange={(e) => setProfile({ ...profile, displayName: e.target.value })}
-                                    placeholder="Enter display name" 
+                                    placeholder={language[lan].profilePHDisplayName} 
                                     className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-green-400"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Email:</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">{language[lan].profileEmail}</label>
                                 <input 
                                     type="email" 
                                     value={profile.email}
                                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                                    placeholder="Enter email" 
+                                    placeholder={language[lan].profilePHEmail}
                                     className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-green-400"
                                 />
                             </div>
@@ -230,7 +230,7 @@ const Profile = () => {
                                 onClick={updateProfile}
                                 className="bg-green-600 hover:bg-green-500 text-white font-semibold py-3 px-6 rounded-lg transition"
                             >
-                                Update Profile
+                                {language[lan].updateProfile}
                             </button>
                         </div>
                     </div>
@@ -238,19 +238,19 @@ const Profile = () => {
 
                 {/* Game Statistics */}
                 <section>
-                    <h2 className="text-2xl font-bold text-pong-green -400 mb-6">Game Statistics</h2>
+                    <h2 className="text-2xl font-bold text-pong-green -400 mb-6">{language[lan].profileGameStatistics}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="bg-gray-800 border border-gray-700 rounded-lg text-center p-6 shadow">
                             <h3 className="text-3xl font-bold text-pong-green">{profile.wins}</h3>
-                            <p className="text-gray-300">Wins</p>
+                            <p className="text-gray-300">{language[lan].profileWins}</p>
                         </div>
                         <div className="bg-gray-800 border border-gray-700 rounded-lg text-center p-6 shadow">
                             <h3 className="text-3xl font-bold text-red-400">{profile.losses}</h3>
-                            <p className="text-gray-300">Losses</p>
+                            <p className="text-gray-300">{language[lan].profileLosses}</p>
                         </div>
                         <div className="bg-gray-800 border border-gray-700 rounded-lg text-center p-6 shadow">
                             <h3 className="text-3xl font-bold text-blue-400">{profile.winRate}%</h3>
-                            <p className="text-gray-300">Win Rate</p>
+                            <p className="text-gray-300">{language[lan].profileWinRate}</p>
                         </div>
                     </div>
                 </section>
@@ -260,26 +260,26 @@ const Profile = () => {
                     
                     {/* Friends */}
                     <div>
-                        <h2 className="text-2xl font-bold text-pong-green mb-4">Friends</h2>
+                        <h2 className="text-2xl font-bold text-pong-green mb-4">{language[lan].profileFriends}</h2>
                         <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 shadow">
                             <div className="flex gap-2 mb-4">
                                 <input 
                                     type="text" 
                                     value={friendUsername}
                                     onChange={(e) => setFriendUsername(e.target.value)}
-                                    placeholder="Enter username" 
+                                    placeholder={language[lan].profilePHenterUsername} 
                                     className="flex-1 bg-gray-700 text-white border border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-green-400"
                                 />
                                 <button 
                                     onClick={sendFriendRequest}
                                     className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 rounded-lg transition"
                                 >
-                                    Add Friend
+                                    {language[lan].profileAddFriend}
                                 </button>
                             </div>
                             <div className="space-y-2">
                                 {friends.length === 0 ? (
-                                    <p className="text-gray-400 text-center py-4">No friends yet</p>
+                                    <p className="text-gray-400 text-center py-4">{language[lan].profileNoFriendsYet}</p>
                                 ) : (
                                     friends.map((friend, index) => (
                                         <div key={index} className="bg-gray-700 p-3 rounded-lg flex items-center">
@@ -288,7 +288,7 @@ const Profile = () => {
                                             />
                                             <span className='mx-5'>{friend.username}</span>
                                             <span className={`text-sm ${friend.isOnline ? 'text-green-400' : 'text-red-500'} ml-auto`}>
-                                                {friend.isOnline ? '🟢 Online' : '⚫ Offline'}
+                                                {friend.isOnline ? `🟢 ${language[lan].profileIsOnilne}` : `⚫ ${language[lan].profileIsOffline}`}
                                             </span>
                                         </div>
                                     ))
@@ -299,11 +299,11 @@ const Profile = () => {
 
                     {/* Match History */}
                     <div>
-                        <h2 className="text-2xl font-bold text-pong-green mb-4">Match History</h2>
+                        <h2 className="text-2xl font-bold text-pong-green mb-4">{language[lan].MatchHistory}</h2>
                         <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 shadow max-h-96 overflow-y-auto">
                             <div className="space-y-3">
                                 {matchHistory.length === 0 ? (
-                                    <p className="text-gray-400 text-center py-4">No matches yet</p>
+                                    <p className="text-gray-400 text-center py-4">{language[lan].profileNoMatchesYet}</p>
                                 ) : (
                                     matchHistory.map((match, index) => (
                                         <div key={index} className="bg-gray-700 p-3 rounded-lg">
@@ -312,11 +312,11 @@ const Profile = () => {
                                                     {match.player1} vs {match.player2}
                                                 </span>
                                                 <span className={`font-bold ${match.won ? 'text-green-400' : 'text-red-400'}`}>
-                                                    {match.won ? 'WIN' : 'LOSS'}
+                                                    {match.won ? `${language[lan].profileWinMatch}` : `${language[lan].profileLossMatch}`}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                Score: {match.score} • {match.date}
+                                                {language[lan].profileScore}: {match.score} • {match.date}
                                             </p>
                                         </div>
                                     ))
