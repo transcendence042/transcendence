@@ -87,6 +87,10 @@ const Components = () => {
     })))
   }
 
+  const deleteNotification = (id) => {
+    setNotificationsList(notificationsList.filter(noti => noti.id != id))
+  }
+
 
   return (
     <>
@@ -145,7 +149,7 @@ const Components = () => {
                                                                       notificationsList.map((notif) => (
                                                                         <div 
                                                                           key={notif.id}
-                                                                          className={`p-4 border-b ${!notif.status && 'bg-slate-900'} border-gray-700 hover:bg-gray-700 transition cursor-pointer`}
+                                                                          className={`relative p-4 border-b ${!notif.status && 'bg-slate-900'} border-gray-700 hover:bg-gray-700 transition cursor-pointer`}
                                                                           onClick={() => handleClickNotification(notif)}
                                                                         >
                                                                           <div className='flex items-start gap-3'>
@@ -157,6 +161,13 @@ const Components = () => {
                                                                               </p>
                                                                               <p className='text-xs text-gray-400 mt-1'>{getTimeAgo(Date.now() - notif.time)}</p>
                                                                             </div>
+                                                                          </div>
+                                                                          <div className='absolute top-1 right-3'>
+                                                                            <button className='text-gray-400  rounded-full w-3 h-3 flex justify-center items-center'
+                                                                            onClick={() => deleteNotification(notif.id)}
+                                                                            >
+                                                                              x
+                                                                            </button>
                                                                           </div>
                                                                         </div>
                                                                       ))

@@ -5,7 +5,7 @@ import { io } from 'socket.io-client'
 export const ComponentContext = createContext();
 
 export function ComponentContextProvider({children}) {
-    const [notifications, setNotifications] = useState(1);
+    const [notifications, setNotifications] = useState(0);
     const [notificationsList, setNotificationsList] = useState([]);
 
     const {token, user} = useContext(AuthContext)

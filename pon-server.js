@@ -94,7 +94,7 @@ app.get('/api/user/match-history', { preHandler: authenticate }, getMatchHistory
 // Create Socket.IO server
 const io = new Server(app.server, {
     cors: {
-        origin: 'http://localhost:2323',
+        origin: ['http://localhost:2323', 'http://127.0.0.1:2323'],
         methods: ["GET", "POST"]
     }
 });

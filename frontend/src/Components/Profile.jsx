@@ -193,11 +193,6 @@ const Profile = () => {
                             >
                                 {language[lan].changeAvatar}
                             </button>
-                            <button 
-                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg mt-4 transition"
-                            >
-                                {language[lan].changePassword}
-                            </button>
                         </div>
 
                         {/* Profile Info */}
