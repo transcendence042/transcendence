@@ -32,6 +32,7 @@ import {
   changePassword,
 } from './backend/auth.js';
 import { initializeDatabase, Match, User } from './backend/db.js';
+import { SocketAddress } from 'net';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -167,7 +168,7 @@ setInterval(async () => {
                 updateAIPaddle(room.gameState.player2, room.aiDifficulty);
             }	
             await updateGame(room.gameState, roomId);
-            io.to(roomId).emit('gameUpdate', room.gameState, roomId);
+            io.to(roomId).emit('gameUpdate', {...room.gameState, players: room.players}, roomId);
         }
 
         if (room.players.length === 0) {
@@ -248,16 +249,52 @@ app.decorate('onlineUsers', new Map()); // userId -> socketId
 io.on("connection", (socket) => {
     console.log("🎮 Player connected:", socket.user.username, socket.user.id);
 
-     const userId = socket.user.id; // assuming you decode token
+     const userId = socket.user.id;
      app.onlineUsers.set(userId, socket.id);
 
-    // 👇 Join the user’s personal room (based on their ID)
+    // Join the user’s personal room (based on their ID)
     socket.join(socket.user.id);
+    socket.playerRoom = new Map();
 
     // Send current lobby info
     socket.emit("lobbyUpdate", getLobbyInfo());
 
+    socket.on("createRoom", (roomNameId, {mode}) => {
+
+        const roomTemp = gameRooms[roomNameId]
+        const aiEnabled = mode === 'AI'
+        if (roomTemp) {
+            roomNameId = roomNameId + '$$$';
+        }
+
+        gameRooms[roomNameId] = {
+            players: [],
+            gameState: createGameState(),
+            startTime: Date.now(),
+            aiEnabled,
+            aiDifficulty: 'medium'
+        }
+        const room = gameRooms[roomNameId];
+        socket.join(roomNameId);
+        socket.playerRoom.set(roomNameId, {isPlayer1: true})
+        room.players.push({id: socket.id, isPlayer1: true, userId: socket.user.id})
+        io.emit("lobbyUpdate", getLobbyInfo());
+        if (mode === "AI") {
+            startAIInterval(roomNameId);
+			io.to(roomNameId).emit("gameReady", { message: `Game ready in ${roomNameId}!` });
+		}
+    })
+
     socket.on("joinRoom", (requestedRoomId, startGame, { mode }, challengeRoom) => {
+
+		// Prevent joining multiple rooms simultaneously
+		if (socket.roomId && socket.roomId !== requestedRoomId) {
+			socket.emit("alreadyInRoom", {
+				message: `You're already in ${socket.roomId}. Leave that room first!`,
+				currentRoom: socket.roomId
+			});
+			return;
+		}
 
 		if (challengeRoom) {
 			console.log(requestedRoomId);
@@ -399,10 +436,40 @@ io.on("connection", (socket) => {
         }
     });
 
+	// Leave room
+	socket.on("leaveRoom", () => {
+		const roomId = socket.roomId;
+		if (!roomId) return;
+		
+		const room = gameRooms[roomId];
+		if (room) {
+			room.players = room.players.filter(p => p.id !== socket.id);
+			socket.leave(roomId);
+			console.log(`👋 ${socket.user.username} left ${roomId}`);
+			
+			// Notify others
+			socket.to(roomId).emit("opponentLeft", { 
+				message: "Opponent left the game." 
+			});
+		}
+		
+		socket.roomId = null;
+		socket.isPlayer1 = null;
+		
+		io.emit("lobbyUpdate", getLobbyInfo());
+	});
+
     // Paddle movement
     socket.on("paddleMove", (data) => {
-        const room = gameRooms[socket.roomId];
+        const room = gameRooms[data.room];
         if (!room || room.gameState.gameEnded) return;
+
+        const getPlayerInfo = socket.playerRoom.get(data.room)
+        if (getPlayerInfo) {
+            if (getPlayerInfo.isPlayer1) room.gameState.player1.y = Math.max(0, Math.min(300, data.y));
+            else room.gameState.player2.y = Math.max(0, Math.min(300, data.y));
+            return ;
+        }
         if (socket.isPlayer1) room.gameState.player1.y = Math.max(0, Math.min(300, data.y));
         else room.gameState.player2.y = Math.max(0, Math.min(300, data.y));
     });

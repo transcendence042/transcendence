@@ -105,7 +105,7 @@ const Components = () => {
             <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/logout')}>{language[lan].Logout}</button>
           </nav>
 
-          <div className='flex-1 min-w-0'>
+          <div className='flex-1 min-w-0 flex flex-col'>
             <div className='bg-gray-800 h-16 flex items-center justify-between px-4 md:px-8 gap-4'>
               <div className='flex flex-1 max-w-md'>
                 <FaSearch className='bg-white/95 w-7 h-8 px-2 rounded-l-md flex justify-center items-center'/>
@@ -195,7 +195,7 @@ const Components = () => {
 
               
             </div>
-            <div className='mt-6 text-white px-4'>
+            <div className='flex-1 overflow-y-auto p-6'>
               <Routes>
                 <Route index element={<Index/>}/>
                 <Route path='profile' element={<Profile/>}/>
