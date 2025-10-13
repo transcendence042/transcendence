@@ -69,6 +69,30 @@ export function ComponentContextProvider({children}) {
         }
     }, [user, token]);
 
+    // Separate useEffect for gameEnded listener with roomIamIn dependency
+    useEffect(() => {
+        if (!socketRef.current || !roomIamIn) return;
+
+        const handleGameEnded = (roomId) => {
+            console.log("🏁 Game ended in room:", roomId);
+            console.log("📍 Current roomIamIn:", roomIamIn);
+            
+            if (roomId === roomIamIn) {
+                console.log("✅ Leaving room:", roomIamIn);
+                setRoomIamIn('');
+            }
+        };
+
+        socketRef.current.on("gameEnded", handleGameEnded);
+
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.off("gameEnded", handleGameEnded);
+                console.log("🧹 Cleaned up gameEnded listener");
+            }
+        };
+    }, [roomIamIn]);
+
 
     return (
         <ComponentContext.Provider value={{

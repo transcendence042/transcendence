@@ -140,7 +140,8 @@ function getLobbyInfo() {
 console.log(Object.entries(gameRooms))
     return Object.entries(gameRooms).map(([id, room]) => ({
         roomId: id,
-        players: room.players.length
+        players: room.players,
+        aiEnabled: room.aiEnabled
     }));
 }
 
@@ -301,7 +302,7 @@ io.on("connection", (socket) => {
         const room = gameRooms[roomNameId];
         socket.join(roomNameId);
         socket.playerRoom.set(roomNameId, true)
-        room.players.push({id: socket.id, isPlayer1: true, userId: socket.user.id})
+        room.players.push({id: socket.id, isPlayer1: true, userId: socket.user.id, username: socket.user.username})
         io.emit("lobbyUpdate", getLobbyInfo());
         if (mode === "AI") {
             startAIInterval(roomNameId);
@@ -566,6 +567,14 @@ async function updateGame(gameState, roomId) {
     if (gameEnded && gameRooms[roomId]) {
         gameState.gameEnded = true; // Mark game as ended to stop updates
         const room = gameRooms[roomId];
+        
+        // Clean up roomPlayersAreIn - remove players who were viewing this room
+        for (const userId in roomPlayersAreIn) {
+            if (roomPlayersAreIn[userId] === roomId) {
+                delete roomPlayersAreIn[userId];
+            }
+        }
+
         if (room.players.length === 2) {
             const player1 = room.players.find(p => p.isPlayer1);
             const player2 = room.players.find(p => !p.isPlayer1);
