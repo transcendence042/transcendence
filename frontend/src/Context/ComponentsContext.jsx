@@ -8,6 +8,7 @@ export function ComponentContextProvider({children}) {
     const [notifications, setNotifications] = useState(0);
     const [notificationsList, setNotificationsList] = useState([]);
     const [roomsRunning, setRoomsRunning] = useState([]);
+    const [roomIamIn, setRoomIamIn] = useState('');
 
     const {token, user} = useContext(AuthContext)
     const socketRef = useRef(null);
@@ -28,6 +29,11 @@ export function ComponentContextProvider({children}) {
                 console.log('Socket connected:', socketRef.current.id);
             });
 
+            socketRef.current.on("startConnection", (data) => {
+                console.log("On start Connection data.roomImIn:", data.roomImIn)
+                setRoomIamIn(data.roomImIn);
+            })
+
             socketRef.current.on('disconnect', () => {
                 console.log('Socket disconnected');
             });
@@ -38,7 +44,14 @@ export function ComponentContextProvider({children}) {
 
             socketRef.current.on("sendFriendRequest", (data) => {
                 setNotifications(notifications => notifications + 1)
-                setNotificationsList([...notificationsList, {id: Date.now(),user: data.from, msg: "has send you a friend request", time: Date.now(), type: 'friendRequest', status: true}])
+                setNotificationsList(prevList => [...prevList, {
+                    id: Date.now(),
+                    user: data.from, 
+                    msg: "has send you a friend request", 
+                    time: Date.now(), 
+                    type: 'friendRequest', 
+                    status: true
+                }])
             })
 
             socketRef.current.on("lobbyUpdate", (roomsRunningLobby) => {
@@ -66,6 +79,8 @@ export function ComponentContextProvider({children}) {
             setNotificationsList,
             roomsRunning,
             setRoomsRunning,
+            roomIamIn,
+            setRoomIamIn
         }}>
             {children}
         </ComponentContext.Provider>

@@ -106,7 +106,8 @@ app.decorate('io', io);
 //gameRooms is an object so it store data as key-value pairs 
 var gameRooms = {};
 var nextRoomId = 1;
-let freeRoomIds = []; 
+let freeRoomIds = [];
+var roomPlayersAreIn = {};
 
 //The shift() method returns and removes the first element in the array
 function createRoomId() {
@@ -168,7 +169,9 @@ setInterval(async () => {
                 updateAIPaddle(room.gameState.player2, room.aiDifficulty);
             }	
             await updateGame(room.gameState, roomId);
-            io.to(roomId).emit('gameUpdate', {...room.gameState, players: room.players}, roomId);
+            const isPlayerInRoom = checkPlayerIsInRoom(room.players, roomId);
+            if (isPlayerInRoom)
+                io.to(roomId).emit('gameUpdate', {...room.gameState, players: room.players}, roomId);
         }
 
         if (room.players.length === 0) {
@@ -178,6 +181,10 @@ setInterval(async () => {
         }
     }
 }, 1000/60);
+
+const checkPlayerIsInRoom = (players, roomId) => {
+    return players.some(p => roomId === roomPlayersAreIn[p.userId]);
+}
 
 // ---------------- AI Logic ----------------
 
@@ -256,8 +263,25 @@ io.on("connection", (socket) => {
     socket.join(socket.user.id);
     socket.playerRoom = new Map();
 
+    const joinRooms = () => {
+        for (let roomId in gameRooms) {
+            const players = gameRooms[roomId].players;
+            const IsPlayerInRoom = players.some(p => p.userId === socket.user.id);
+            if (IsPlayerInRoom) {
+                socket.join(roomId);
+                const isPlayer1 = players.find(p => p.userId === socket.user.id)?.isPlayer1;
+                console.log("OnjoiningRooms -> isPlayer1", isPlayer1);
+                socket.playerRoom.set(roomId, isPlayer1)
+            }
+        }
+    }
+
+    joinRooms();
+
     // Send current lobby info
     socket.emit("lobbyUpdate", getLobbyInfo());
+
+    socket.emit("startConnection", {roomImIn: roomPlayersAreIn[socket.user.id]})
 
     socket.on("createRoom", (roomNameId, {mode}) => {
 
@@ -276,13 +300,17 @@ io.on("connection", (socket) => {
         }
         const room = gameRooms[roomNameId];
         socket.join(roomNameId);
-        socket.playerRoom.set(roomNameId, {isPlayer1: true})
+        socket.playerRoom.set(roomNameId, true)
         room.players.push({id: socket.id, isPlayer1: true, userId: socket.user.id})
         io.emit("lobbyUpdate", getLobbyInfo());
         if (mode === "AI") {
             startAIInterval(roomNameId);
 			io.to(roomNameId).emit("gameReady", { message: `Game ready in ${roomNameId}!` });
 		}
+    })
+
+    socket.on("roomImIn", (roomId) => {
+        roomPlayersAreIn[socket.user.id] = roomId;
     })
 
     socket.on("joinRoom", (requestedRoomId, startGame, { mode }, challengeRoom) => {
@@ -464,21 +492,19 @@ io.on("connection", (socket) => {
         const room = gameRooms[data.room];
         if (!room || room.gameState.gameEnded) return;
 
-        const getPlayerInfo = socket.playerRoom.get(data.room)
-        if (getPlayerInfo) {
-            if (getPlayerInfo.isPlayer1) room.gameState.player1.y = Math.max(0, Math.min(300, data.y));
-            else room.gameState.player2.y = Math.max(0, Math.min(300, data.y));
-            return ;
-        }
-        if (socket.isPlayer1) room.gameState.player1.y = Math.max(0, Math.min(300, data.y));
+        const isPlayer1 = socket.playerRoom.get(data.room)
+        if (isPlayer1) room.gameState.player1.y = Math.max(0, Math.min(300, data.y));
         else room.gameState.player2.y = Math.max(0, Math.min(300, data.y));
+        //if (socket.isPlayer1) room.gameState.player1.y = Math.max(0, Math.min(300, data.y));
+        //else room.gameState.player2.y = Math.max(0, Math.min(300, data.y));
     });
 
     // Handle disconnect
     socket.on("disconnect", () => {
         //onlineUsers.delete(userId);
         console.log("❌ Player disconnected:", socket.user.username, socket.user.id);
-        app.onlineUsers.delete(socket.user.id);
+        //app.onlineUsers.delete(socket.user.id);
+        return;
 		const roomId = socket.roomId;
 		if (!roomId || !gameRooms[roomId]) return;
 

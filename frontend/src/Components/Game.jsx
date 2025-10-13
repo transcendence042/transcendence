@@ -6,16 +6,16 @@ const Game = () => {
 
     const {user} = useContext(AuthContext)
     const [gameName, setGameName] = useState('23');
-    const [roomIamIn, setRoomIamIn] = useState('');
-    const {socket, roomsRunning} = useContext(ComponentContext);
+    const {socket, roomsRunning, roomIamIn, setRoomIamIn} = useContext(ComponentContext);
     const [gameState, setGameState] = useState(null);
-    const canvasRef = useRef(null)
+
+    const canvasRef = useRef(null);
 
 
     useEffect ( () => {
     if (!gameState) {console.log("returning before rendering!!!"); return;}
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {console.log("Returning in !canvas"); return};
     const ctx = canvas.getContext("2d");
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -71,22 +71,35 @@ const Game = () => {
     const createGame = () => {
         if (!socket) return;
         socket.emit("createRoom", gameName, {mode: 'AI'})
+        setGameName('');
     }
 
 
     useEffect(() => {
-        if (!socket) return;
-        socket.emit("roomIamIn", roomIamIn)
-    }, [roomIamIn])
+        if (!socket || !roomIamIn) return;
+        console.log("📤 Emitting roomImIn:", roomIamIn);
+        socket.emit("roomImIn", roomIamIn);
+    }, [roomIamIn, socket])
 
     useEffect(() => {
-        if (!socket) return;
-        socket.on("gameUpdate", (data, roomTorender) => {
-            setGameState(data)
-            console.log("GAME IS UPDATING!!!!")
-        })
-        console.log("in game this is the user id:", user.id, "this is the username", user.username)
+        if (!socket) {
+            console.log("❌ No socket for gameUpdate listener");
+            return;
+        }
         
+        console.log("✅ Setting up gameUpdate listener");
+        
+        const handleGameUpdate = (data, roomTorender) => {
+            console.log("🎮 GAME UPDATE RECEIVED! Room:", roomTorender);
+            setGameState(data);
+        }
+        
+        socket.on("gameUpdate", handleGameUpdate);
+        
+        return () => {
+            console.log("🧹 Removing gameUpdate listener");
+            socket.off("gameUpdate", handleGameUpdate);
+        }
     }, [socket])
 
     const handleMouseMove = (e) => {
@@ -106,13 +119,13 @@ const Game = () => {
                 <input 
                     className="px-4 py-2 rounded-lg border-2 border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
                     value={gameName} 
-                    onChange={(e) => setGameName(e.target.value)}
+                    onChange={(e) => { if (e.target.value != '') setGameName(e.target.value)}}
                     placeholder="Enter room name..."
                 />
                 
                 {roomsRunning.length === 0 ? (
                     <button 
-                        onClick={() => createGame()}
+                        onClick={() => {createGame()}}
                         className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
                     >
                         Create Game
@@ -125,25 +138,27 @@ const Game = () => {
                                 onClick={() => setRoomIamIn(rooms.roomId)}
                                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
                             >
-                                Join Room {index + 1}
+                                {rooms.roomId}
                             </button>
                         ))}
                     </div>
                 )}
             </div>
 
-            <div className="overflow-x-auto mb-6">
-                <div className="flex justify-center min-w-max">
-                    <canvas 
-                        className="bg-black border-4 border-gray-700 rounded-lg shadow-2xl cursor-none" 
-                        ref={canvasRef} 
-                        width={800} 
-                        height={400} 
-                        id="gameCanvas" 
-                        onMouseMove={handleMouseMove}
-                    />
-                </div>
-            </div>
+            {roomIamIn &&
+                <div className="overflow-x-auto mb-6">
+                    <div className="flex justify-center min-w-max">
+                        <canvas 
+                            className="bg-black border-4 border-gray-700 rounded-lg shadow-2xl cursor-none" 
+                            ref={canvasRef} 
+                            width={800} 
+                            height={400} 
+                            id="gameCanvas" 
+                            onMouseMove={handleMouseMove}
+                        />
+                    </div>
+               </div>
+            }
         </>
     )
 }
