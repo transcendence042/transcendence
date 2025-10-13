@@ -172,10 +172,16 @@ setInterval(async () => {
             await updateGame(room.gameState, roomId);
             const isPlayerInRoom = checkPlayerIsInRoom(room.players, roomId);
             if (isPlayerInRoom)
+            {
+                //console.log("Game updatinnnnngngnngng!!!")
                 io.to(roomId).emit('gameUpdate', {...room.gameState, players: room.players}, roomId);
+            }
         }
 
         if (room.players.length === 0) {
+            // Make all sockets leave the Socket.IO room before deleting
+            io.in(roomId).socketsLeave(roomId);
+            
             delete gameRooms[roomId];
             releaseRoomId(roomId);
             io.emit("lobbyUpdate", getLobbyInfo());
@@ -282,7 +288,11 @@ io.on("connection", (socket) => {
     // Send current lobby info
     socket.emit("lobbyUpdate", getLobbyInfo());
 
-    socket.emit("startConnection", {roomImIn: roomPlayersAreIn[socket.user.id]})
+    socket.emit("startConnection", {
+        isPlyerInRoom: gameRooms[roomPlayersAreIn[socket.user.id]]?.players.some(p => p.userId === socket.user.id),
+        roomImIn: roomPlayersAreIn[socket.user.id] || null,
+        aiEnabled: gameRooms[roomPlayersAreIn[socket.user.id]]?.aiEnabled || false
+    })
 
     socket.on("createRoom", (roomNameId, {mode}) => {
 
@@ -291,7 +301,9 @@ io.on("connection", (socket) => {
         if (roomTemp) {
             roomNameId = roomNameId + '$$$';
         }
-
+    
+        console.log(`🎮 Creating room '${roomNameId}' with AI=${aiEnabled}, mode='${mode}'`);
+    
         gameRooms[roomNameId] = {
             players: [],
             gameState: createGameState(),
@@ -301,6 +313,7 @@ io.on("connection", (socket) => {
         }
         const room = gameRooms[roomNameId];
         socket.join(roomNameId);
+        //set is player is player1 in this room (in this case is true)
         socket.playerRoom.set(roomNameId, true)
         room.players.push({id: socket.id, isPlayer1: true, userId: socket.user.id, username: socket.user.username})
         io.emit("lobbyUpdate", getLobbyInfo());
@@ -309,9 +322,46 @@ io.on("connection", (socket) => {
 			io.to(roomNameId).emit("gameReady", { message: `Game ready in ${roomNameId}!` });
 		}
     })
-
     socket.on("roomImIn", (roomId) => {
+        //const room = gameRooms[roomId];
+        //if (!room) return;
+        //const isPlyerInRoom = room.players.some(p => p.userId === socket.user.is)
+        //if (isPlyerInRoom)
         roomPlayersAreIn[socket.user.id] = roomId;
+    })
+    socket.on("joinRoomGame", (roomId) => {
+        const room = gameRooms[roomId];
+        if (!room) return;
+        
+        console.log(`🔍 ${socket.user.username} trying to join ${roomId}. AI=${room.aiEnabled}, players=${room.players.length}`);
+        
+        //check if player is in this room
+        const isPlyerInRoom = room.players.some(p => p.userId === socket.user.id)
+        if (isPlyerInRoom) {
+            //just return because socket.emit("roomImIn", roomIamIn) is gonna let the server know which room to join
+            console.log(`${socket.user.username} is re joining the room: ${roomId} like isPlayer1: ${socket.playerRoom.get(roomId)}`)
+            //send User if this room is AI enabled 
+            io.to(socket.user.id).emit("roomJoinedInfo", {aiEnabled: room.aiEnabled});
+            console.log("reJoining game as", socket.user.username);
+            return ;
+        }
+        //check if room is full
+        if (room.players.length === 2 || room.aiEnabled) {
+            console.log(`❌ ${socket.user.username} BLOCKED from ${roomId} (AI=${room.aiEnabled}, players=${room.players.length})`); 
+            return;
+        }
+
+        console.log("JoinRoomGame as", socket.user.username);
+
+        //join Room
+        room.players.push({id: socket.id, isPlayer1: false, userId: socket.user.id, username: socket.user.username})
+        //join socket to receive info from this roomId
+        socket.join(roomId)
+        //set is player is player1 in this room (in this case is false)
+        socket.playerRoom.set(roomId, false)
+        //send User if this room is AI enabled 
+        io.to(socket.user.id).emit("roomJoinedInfo", {aiEnabled: room.aiEnabled});
+        io.emit("lobbyUpdate", getLobbyInfo())
     })
 
     socket.on("joinRoom", (requestedRoomId, startGame, { mode }, challengeRoom) => {
@@ -607,8 +657,19 @@ async function updateGame(gameState, roomId) {
             }
         }
 		io.to(roomId).emit("gameEnded", roomId);
+		
+		// Make all sockets leave the Socket.IO room before deleting
+        // with io.sockets.sockets with access to all sockets created: io -> (chosen) sockets (both fixed)
+        room.players.forEach(player => {
+            const playerSocket = io.sockets.sockets.get(player.id);
+            if (playerSocket) {
+                playerSocket.leave(roomId);
+                // roomPlayersAreIn already cleaned up above (lines 607-612)
+            }
+        })
+		
 		delete gameRooms[roomId];
-		releaseRoomId(roomId);
+		//releaseRoomId(roomId);
 		console.log(`🗑️ Room ${roomId} deleted`);
 		io.emit("lobbyUpdate", getLobbyInfo());
     }

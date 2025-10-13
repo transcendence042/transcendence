@@ -6,11 +6,12 @@ const Game = () => {
 
     const {user} = useContext(AuthContext)
     const [gameName, setGameName] = useState(user.username);
-    const {socket, roomsRunning, roomIamIn, setRoomIamIn} = useContext(ComponentContext);
+    const {socket, roomsRunning, roomIamIn, setRoomIamIn, isAiEnabled, setIsAiEnabled} = useContext(ComponentContext);
     const [gameState, setGameState] = useState(null);
     const [createNewGame, setCreateNewGame] = useState(false);
     const [chooseOponent, setChooseOponent] = useState(false);
     const [oponent, setOponent] = useState('robocot')
+
 
     const canvasRef = useRef(null);
 
@@ -82,11 +83,28 @@ const Game = () => {
     }
 
 
+    // Emit roomImIn when room changes
     useEffect(() => {
         if (!socket || !roomIamIn) return;
         console.log("📤 Emitting roomImIn:", roomIamIn);
         socket.emit("roomImIn", roomIamIn);
     }, [roomIamIn, socket])
+
+    // Listen for roomJoinedInfo once
+    useEffect(() => {
+        if (!socket) return;
+        
+        const handleRoomJoinedInfo = (data) => {
+            console.log("🎮 Room joined info received:", data);
+            setIsAiEnabled(data.aiEnabled);
+        };
+        
+        socket.on("roomJoinedInfo", handleRoomJoinedInfo);
+        
+        return () => {
+            socket.off("roomJoinedInfo", handleRoomJoinedInfo);
+        };
+    }, [socket])
 
     useEffect(() => {
         if (!socket) {
@@ -120,6 +138,19 @@ const Game = () => {
 
     const setDifficulty = (level) => {
         socket.emit('setDifficulty', {level}, roomIamIn);
+    }
+
+    const joinRoom = (room) => {
+        //check if player is already in this room
+        if (roomIamIn === room.roomId) return ;
+
+        //check if player is allow in this room
+        const isPlayerInRoom = room.players.some(player => player.userId === user.id)
+        if (!isPlayerInRoom && (room.players.length === 2 || room.aiEnabled)) return;
+
+        socket.emit("joinRoomGame", room.roomId)
+        //setRoomIamIn to triger socket.emit("roomImIn", roomIamIn) so the server knows which room should update
+        setRoomIamIn(room.roomId);
     }
 
     return (
@@ -163,10 +194,10 @@ const Game = () => {
                         {roomsRunning.map((rooms, index) => (
                             <button 
                                 key={index} 
-                                onClick={() => setRoomIamIn(rooms.roomId)}
+                                onClick={() => joinRoom(rooms)}
                                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
                             >
-                                {rooms.roomId}
+                                {rooms.roomId}  {" "}
                                 {rooms.players.find(p => p.isPlayer1)?.username} vs {rooms.aiEnabled ? '🤖'  : rooms.players.find(p => !p.isPlayer1)?.username} 
                             </button>
                         ))}
@@ -176,6 +207,7 @@ const Game = () => {
 
             {roomIamIn &&
                 <div className="mb-6">
+                    { isAiEnabled &&
                     <div className="flex flex-col items-center gap-4 mb-6">
                         <h2 className="text-white text-2xl font-bold tracking-wide">Select Difficulty</h2>
                         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 px-4">
@@ -204,6 +236,7 @@ const Game = () => {
                             </button>
                         </div>
                     </div>
+                    }
                     <div className="overflow-x-auto">
                         <div className="flex justify-center min-w-max">
                             <canvas 

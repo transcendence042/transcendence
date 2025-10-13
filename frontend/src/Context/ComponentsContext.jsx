@@ -9,7 +9,8 @@ export function ComponentContextProvider({children}) {
     const [notificationsList, setNotificationsList] = useState([]);
     const [roomsRunning, setRoomsRunning] = useState([]);
     const [roomIamIn, setRoomIamIn] = useState('');
-
+    const [isAiEnabled, setIsAiEnabled] = useState(false);
+    
     const {token, user} = useContext(AuthContext)
     const socketRef = useRef(null);
 
@@ -31,7 +32,12 @@ export function ComponentContextProvider({children}) {
 
             socketRef.current.on("startConnection", (data) => {
                 console.log("On start Connection data.roomImIn:", data.roomImIn)
+                if (!data.isPlayerInRoom) {
+                    setRoomIamIn('');
+                    setIsAiEnabled(false);
+                }
                 setRoomIamIn(data.roomImIn);
+                setIsAiEnabled(data.aiEnabled)
             })
 
             socketRef.current.on('disconnect', () => {
@@ -104,7 +110,9 @@ export function ComponentContextProvider({children}) {
             roomsRunning,
             setRoomsRunning,
             roomIamIn,
-            setRoomIamIn
+            setRoomIamIn,
+            isAiEnabled,
+            setIsAiEnabled,
         }}>
             {children}
         </ComponentContext.Provider>
