@@ -12,6 +12,7 @@ const Game = () => {
     const [playersScores, setPlayersScores] = useState({});
     const [chooseOponent, setChooseOponent] = useState(false);
     const [oponent, setOponent] = useState('robocot')
+    const [difficultyLevel, setDifficultyLevel] = useState('');
 
 
     const canvasRef = useRef(null);
@@ -77,7 +78,11 @@ const Game = () => {
         ctx.lineWidth = 3;
         ctx.strokeRect(gameState.player2.x - 1, gameState.player2.y - 1, gameState.player2.width + 2, gameState.player2.height + 2);
     }
-    setPlayersScores({player1Score: gameState.player1.score, player2Score: gameState.player2.score})
+    const player1Name = gameState.players.find(player => player.isPlayer1)?.username;
+    const player2Name = gameState.players.filter(player => !player.isPlayer1)?.username;
+    setPlayersScores({player1Score: gameState.player1.score, player1Name, player2Score: gameState.player2.score, player2Name})
+    if (difficultyLevel !== gameState.aiDifficulty)
+        setDifficultyLevel(gameState.aiDifficulty)
 }, [gameState, roomIamIn])
 
     const createGame = () => {
@@ -124,7 +129,6 @@ const Game = () => {
         console.log("✅ Setting up gameUpdate listener");
         
         const handleGameUpdate = (data, roomTorender) => {
-            console.log("🎮 GAME UPDATE RECEIVED! Room:", roomTorender);
             setGameState(data);
         }
         
@@ -220,18 +224,18 @@ const Game = () => {
                     { isAiEnabled &&
                     <div className="flex flex-col items-center gap-4 mb-6">
                         <h2 className="text-white text-2xl font-bold tracking-wide">Select Difficulty</h2>
-                        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 px-4">
+                        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                             <button 
                                 onClick={() => setDifficulty('easy')} 
-                                className="group relative px-8 sm:px-12 py-3 bg-gradient-to-br from-green-400 to-green-600 text-white text-lg sm:text-xl font-bold rounded-lg shadow-lg hover:shadow-green-500/50 hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-green-300/50 hover:border-green-300"
+                                className={`group relative px-8 sm:px-12 py-3 bg-gradient-to-br from-green-400 to-green-600 text-white text-lg sm:text-xl font-bold rounded-lg shadow-lg hover:shadow-green-500/50 active:scale-95 transition-all duration-200 ${difficultyLevel === 'easy' ? 'border-4 border-green-500': 'border-2 border-green-300/50 hover:border-green-300'}`}
                             >
-                                <span className="relative z-10">🌱 Easy</span>
+                                <span className="relative z-10 px-1">🌱 Easy</span>
                                 <div className="absolute inset-0 bg-gradient-to-br from-green-300 to-green-500 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
                             </button>
                             
                             <button 
                                 onClick={() => setDifficulty('medium')} 
-                                className="group relative px-8 sm:px-12 py-3 bg-gradient-to-br from-orange-400 to-orange-600 text-white text-lg sm:text-xl font-bold rounded-lg shadow-lg hover:shadow-orange-500/50 hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-orange-300/50 hover:border-orange-300"
+                                className={`group relative px-8 sm:px-12 py-3 bg-gradient-to-br from-orange-400 to-orange-600 text-white text-lg sm:text-xl font-bold rounded-lg shadow-lg hover:shadow-orange-500/50 active:scale-95 transition-all duration-200 ${difficultyLevel === 'medium' ? 'border-4 border-green-500' : 'border-2 border-orange-300/50 hover:border-orange-300'}`}
                             >
                                 <span className="relative z-10">⚡ Medium</span>
                                 <div className="absolute inset-0 bg-gradient-to-br from-orange-300 to-orange-500 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
@@ -239,18 +243,26 @@ const Game = () => {
                             
                             <button 
                                 onClick={() => setDifficulty('hard')} 
-                                className="group relative px-8 sm:px-12 py-3 bg-gradient-to-br from-red-600 to-red-800 text-white text-lg sm:text-xl font-bold rounded-lg shadow-lg hover:shadow-red-500/50 hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-red-400/50 hover:border-red-400"
+                                className={`group relative px-8 sm:px-12 py-3 bg-gradient-to-br from-red-600 to-red-800 text-white text-lg sm:text-xl font-bold rounded-lg shadow-lg hover:shadow-red-500/50 active:scale-95 transition-all duration-200 ${difficultyLevel === 'hard' ? 'border-4 border-green-500'  : 'border-2 border-red-400/50 hover:border-red-400'}`}
                             >
-                                <span className="relative z-10">🔥 Hard</span>
+                                <span className="relative z-10 px-1">🔥 Hard</span>
                                 <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-red-700 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
                             </button>
                         </div>
                     </div>
                     }
                     <div>
-                        <span className="text-white">
-                            player1: {playersScores.player1Score} player2: {playersScores.player2Score}
-                        </span>
+                        <div className="mb-4 flex justify-center items center">
+                            <span className="bg-gradient-to-br from-blue-600 to-blue-950 w-6/12 h-16 gap-2 flex justify-evenly items-center rounded-2xl text-xl font-semibold text-white overflow-hidden">
+                                <h1 className="text-2xl font-bold text-white/90">{playersScores.player1Name}</h1>
+                                <div className="gap">
+                                    <span className="mr-6 text-2xl font-bold">{playersScores.player1Score}</span> 
+                                    : 
+                                    <span className="ml-6 text-2xl font-bold">{playersScores.player2Score}</span>
+                                </div>
+                                <h1>{isAiEnabled ? '🤖' : playersScores.player2Name}</h1>
+                            </span>
+                        </div>
                     </div>
                     <div className="overflow-x-auto">
                         <div className="flex justify-center min-w-max">

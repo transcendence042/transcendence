@@ -175,7 +175,7 @@ setInterval(async () => {
             {
                 //console.log("Game updatinnnnngngnngng!!!")
                 isPlayerInRoom.forEach(p => {
-                    io.to(p.userId).emit('gameUpdate', {...room.gameState, players: room.players}, roomId);
+                    io.to(p.userId).emit('gameUpdate', {...room.gameState, players: room.players, aiDifficulty: room.aiDifficulty}, roomId);
                 })
             }
         }
