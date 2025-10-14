@@ -174,7 +174,9 @@ setInterval(async () => {
             if (isPlayerInRoom)
             {
                 //console.log("Game updatinnnnngngnngng!!!")
-                io.to(roomId).emit('gameUpdate', {...room.gameState, players: room.players}, roomId);
+                isPlayerInRoom.forEach(p => {
+                    io.to(p.userId).emit('gameUpdate', {...room.gameState, players: room.players}, roomId);
+                })
             }
         }
 
@@ -190,7 +192,7 @@ setInterval(async () => {
 }, 1000/60);
 
 const checkPlayerIsInRoom = (players, roomId) => {
-    return players.some(p => roomId === roomPlayersAreIn[p.userId]);
+    return players.map(p => (roomId === roomPlayersAreIn[p.userId] ? p : null)).filter(p => p !== null);
 }
 
 // ---------------- AI Logic ----------------
@@ -605,12 +607,12 @@ async function updateGame(gameState, roomId) {
     if (gameState.ball.x < 0) { 
         gameState.player2.score++; 
         resetBall(gameState);
-        if (gameState.player2.score >= 2) gameEnded = true;
+        if (gameState.player2.score >= 20) gameEnded = true;
     }
     else if (gameState.ball.x > 800) { 
         gameState.player1.score++; 
         resetBall(gameState);
-        if (gameState.player1.score >= 2) gameEnded = true;
+        if (gameState.player1.score >= 20) gameEnded = true;
     }
 
     // Save match when game ends

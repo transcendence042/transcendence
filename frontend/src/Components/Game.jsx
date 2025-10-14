@@ -7,6 +7,7 @@ const Game = () => {
     const {user} = useContext(AuthContext)
     const [gameName, setGameName] = useState(user.username);
     const {socket, roomsRunning, roomIamIn, setRoomIamIn, isAiEnabled, setIsAiEnabled} = useContext(ComponentContext);
+    const [roomsPlayerIsIn, setRoomPlayerIsIn] = useState([]);
     const [gameState, setGameState] = useState(null);
     const [playersScores, setPlayersScores] = useState({});
     const [chooseOponent, setChooseOponent] = useState(false);
@@ -14,6 +15,13 @@ const Game = () => {
 
 
     const canvasRef = useRef(null);
+
+    useEffect(() => {
+    const rooms = roomsRunning.filter(room =>
+        room.players.some(player => player.userId === user.id)
+    );
+    setRoomPlayerIsIn(rooms);
+}, [roomsRunning, user.id]);
 
     useEffect ( () => {
     if (!gameState) {console.log("returning before rendering!!!"); return;}
@@ -70,7 +78,7 @@ const Game = () => {
         ctx.strokeRect(gameState.player2.x - 1, gameState.player2.y - 1, gameState.player2.width + 2, gameState.player2.height + 2);
     }
     setPlayersScores({player1Score: gameState.player1.score, player2Score: gameState.player2.score})
-}, [gameState])
+}, [gameState, roomIamIn])
 
     const createGame = () => {
         if (gameName === '') {alert("game Name cannot be empty");return};
@@ -161,7 +169,7 @@ const Game = () => {
             
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-center">
                 
-                {roomsRunning.length === 0 ? (
+                {roomsPlayerIsIn.length === 0 ? (
                     <div className="flex flex-col gap-6">
                         <div className="relative mt-14 px-8 py-4 bg-gray-700 hover:bg-gray-600 text-white text-2xl font-semibold rounded-lg shadow-lg flex justify-center">
                             <button onClick={() => setChooseOponent(!chooseOponent)} className="w-full">Oponent { oponent === 'robocot' ? '🤖' : '👤'}</button>
@@ -193,7 +201,7 @@ const Game = () => {
                     </div>
                 ) : (
                     <div className="flex flex-wrap gap-2">
-                        {roomsRunning.map((rooms, index) => (
+                        {roomsPlayerIsIn.map((rooms, index) => (
                             <button 
                                 key={index} 
                                 onClick={() => joinRoom(rooms, rooms.roomId)}
