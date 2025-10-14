@@ -328,7 +328,7 @@ export async function getMatchHistory(req, reply) {
       order: [['createdAt', 'DESC']],
       limit: 50
     });
-
+    console.log(`getting matchHistory!!!!matches = ${matches.map(m => `${m.Player1.username} vs ${m.Player2.username}`).join(', ')}`);
     reply.send({ matches });
   } catch (error) {
     reply.code(500).send({ error: 'Failed to fetch match history' });

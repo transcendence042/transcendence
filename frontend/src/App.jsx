@@ -11,6 +11,7 @@ import Index from './Components/Index'
 import Logout  from './Components/Logout'
 import Profile from './Components/Profile'
 import Settings from './Components/Settings'
+import Matches  from './Components/Matches'
 
 import FriendRequest from './Components/FriendsRequest'
 
@@ -99,6 +100,7 @@ const Components = () => {
           <nav className='flex flex-col top-0 left-0 w-28 min-h-screen bg-gray-800 text-white'>
             <button className='w-28 h-16 flex justify-center items-center text-3xl border-[1] border-white hover:bg-gray-900' onClick={() => navigate('/index')}>42</button>
             <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/game')}>{language[lan].Game}</button>
+            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/matches')}>Matches</button>
             <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/profile')}>{language[lan].Profile}</button>
             <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/friendRequest')}>{language[lan].FriendRequest}</button>
             <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/settings')}>{language[lan].Settings}</button>
@@ -201,6 +203,7 @@ const Components = () => {
                 <Route path='profile' element={<Profile/>}/>
                 <Route path='friendRequest' element={<FriendRequest/>} />
                 <Route path='game' element={<Game/>}/>
+                <Route path='matches' element={<Matches/>}/>
                 <Route path='settings' element={<Settings/>}/>
                 <Route path='logout' element={<Logout/>}/>
               </Routes>

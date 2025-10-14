@@ -8,13 +8,12 @@ const Game = () => {
     const [gameName, setGameName] = useState(user.username);
     const {socket, roomsRunning, roomIamIn, setRoomIamIn, isAiEnabled, setIsAiEnabled} = useContext(ComponentContext);
     const [gameState, setGameState] = useState(null);
-    const [createNewGame, setCreateNewGame] = useState(false);
+    const [playersScores, setPlayersScores] = useState({});
     const [chooseOponent, setChooseOponent] = useState(false);
     const [oponent, setOponent] = useState('robocot')
 
 
     const canvasRef = useRef(null);
-
 
     useEffect ( () => {
     if (!gameState) {console.log("returning before rendering!!!"); return;}
@@ -70,6 +69,7 @@ const Game = () => {
         ctx.lineWidth = 3;
         ctx.strokeRect(gameState.player2.x - 1, gameState.player2.y - 1, gameState.player2.width + 2, gameState.player2.height + 2);
     }
+    setPlayersScores({player1Score: gameState.player1.score, player2Score: gameState.player2.score})
 }, [gameState])
 
     const createGame = () => {
@@ -80,6 +80,7 @@ const Game = () => {
         //return;
         socket.emit("createRoom", gameName, {mode})
         setGameName('');
+        joinRoom(null, gameName);
     }
 
 
@@ -140,18 +141,19 @@ const Game = () => {
         socket.emit('setDifficulty', {level}, roomIamIn);
     }
 
-    const joinRoom = (room) => {
+    const joinRoom = (room, roomId) => {
         //check if player is already in this room
-        if (roomIamIn === room.roomId) return ;
+        if (roomIamIn === roomId) {console.log("Returnnon in join 'cause roomIamIn is the same as roomId");return};
 
         //check if player is allow in this room
-        const isPlayerInRoom = room.players.some(player => player.userId === user.id)
-        if (!isPlayerInRoom && (room.players.length === 2 || room.aiEnabled)) return;
-
-        socket.emit("joinRoomGame", room.roomId)
+        if (room) {
+            const isPlayerInRoom = room.players.some(player => player.userId === user.id)
+            if (!isPlayerInRoom && (room.players.length === 2 || room.aiEnabled)) return;
+        }
+        socket.emit("joinRoomGame", roomId)
         //setRoomIamIn to triger socket.emit("roomImIn", roomIamIn) so the server knows which room should update
-        setRoomIamIn(room.roomId);
-    }
+        setRoomIamIn(roomId);
+    }       
 
     return (
         <div>
@@ -194,7 +196,7 @@ const Game = () => {
                         {roomsRunning.map((rooms, index) => (
                             <button 
                                 key={index} 
-                                onClick={() => joinRoom(rooms)}
+                                onClick={() => joinRoom(rooms, rooms.roomId)}
                                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
                             >
                                 {rooms.roomId}  {" "}
@@ -237,6 +239,11 @@ const Game = () => {
                         </div>
                     </div>
                     }
+                    <div>
+                        <span className="text-white">
+                            player1: {playersScores.player1Score} player2: {playersScores.player2Score}
+                        </span>
+                    </div>
                     <div className="overflow-x-auto">
                         <div className="flex justify-center min-w-max">
                             <canvas 

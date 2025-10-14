@@ -1,3 +1,4 @@
+import { start } from 'repl';
 import { Sequelize, DataTypes } from 'sequelize';
 
 const sequelize = new Sequelize({
@@ -68,6 +69,7 @@ export const Match = sequelize.define('Match', {
   player2Score: { type: DataTypes.INTEGER, defaultValue: 0 },
   winnerId: { type: DataTypes.INTEGER, allowNull: true },
   duration: { type: DataTypes.INTEGER, defaultValue: 0 }, // in seconds
+  startGameTime: { type: DataTypes.STRING, defaultValue: ''}, // insecond
   gameType: { type: DataTypes.STRING, defaultValue: '1v1' }
 });
 

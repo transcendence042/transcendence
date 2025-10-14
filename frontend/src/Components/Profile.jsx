@@ -23,7 +23,7 @@ const Profile = () => {
         loadProfile();
         loadFriends();
         loadMatchHistory();
-    }, []);
+    }, [token]);
 
     const loadProfile = async () => {
         try {
@@ -34,7 +34,7 @@ const Profile = () => {
                 const data = await res.json();
                 // Ensure no null values for controlled inputs
                 const winRate = data.user.wins + data.user.losses > 0 ? 
-                Math.round((data.user.wins / (data.user.wins + losses)) * 100)
+                Math.round((data.user.wins / (data.user.wins + data.user.losses)) * 100)
                 : 0
                 setProfile({
                     username: data.user.username || '',
@@ -304,14 +304,17 @@ const Profile = () => {
                                         <div key={index} className="bg-gray-700 p-3 rounded-lg">
                                             <div className="flex justify-between items-center">
                                                 <span className="font-semibold">
-                                                    {match.player1} vs {match.player2}
+                                                    {match.Player1.username} {match.player1Score} vs {match.Player2.username} {match.player2Score}
                                                 </span>
                                                 <span className={`font-bold ${match.won ? 'text-green-400' : 'text-red-400'}`}>
                                                     {match.won ? `${language[lan].profileWinMatch}` : `${language[lan].profileLossMatch}`}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                {language[lan].profileScore}: {match.score} • {match.date}
+                                               duration: {match.duration} seconds
+                                            </p>
+                                            <p>
+                                                game start at: {match.startGameTime} 
                                             </p>
                                         </div>
                                     ))

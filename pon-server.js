@@ -605,12 +605,12 @@ async function updateGame(gameState, roomId) {
     if (gameState.ball.x < 0) { 
         gameState.player2.score++; 
         resetBall(gameState);
-        if (gameState.player2.score >= 5) gameEnded = true;
+        if (gameState.player2.score >= 2) gameEnded = true;
     }
     else if (gameState.ball.x > 800) { 
         gameState.player1.score++; 
         resetBall(gameState);
-        if (gameState.player1.score >= 5) gameEnded = true;
+        if (gameState.player1.score >= 2) gameEnded = true;
     }
 
     // Save match when game ends
@@ -631,13 +631,9 @@ async function updateGame(gameState, roomId) {
             
             if (player1 && player2 && player1.userId && player2.userId) {
                 const winnerId = gameState.player1.score > gameState.player2.score ? player1.userId : player2.userId;
-                
-                // Notify players of game end
-                io.to(roomId).emit("gameEnded", {
-                    winner: winnerId === player1.userId ? "Player 1" : "Player 2",
-                    finalScore: `${gameState.player1.score} - ${gameState.player2.score}`
-                });
+
                 // Save match to database
+                console.log(`Saving match:player1Id=${player1.userId}, player2Id=${player2.userId}, player1Score=${gameState.player1.score}, player2Score=${gameState.player2.score}, winnerId=${winnerId}`);
                 await Match.create({
                     player1Id: player1.userId,
                     player2Id: player2.userId,
@@ -645,6 +641,7 @@ async function updateGame(gameState, roomId) {
                     player2Score: gameState.player2.score,
                     winnerId: winnerId,
                     duration: Math.floor((Date.now() - room.startTime) / 1000),
+                    startGameTime: new Date(room.startTime).toLocaleString(),
                     gameType: '1v1'
                 });
 
