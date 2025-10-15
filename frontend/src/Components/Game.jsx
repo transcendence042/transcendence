@@ -13,6 +13,7 @@ const Game = () => {
     const [chooseOponent, setChooseOponent] = useState(false);
     const [oponent, setOponent] = useState('robocot')
     const [difficultyLevel, setDifficultyLevel] = useState('');
+    const [createNewGame, setCreateNewGame] = useState(false);
 
 
     const canvasRef = useRef(null);
@@ -155,6 +156,7 @@ const Game = () => {
 
     const joinRoom = (room, roomId) => {
         //check if player is already in this room
+        setCreateNewGame(false)
         if (roomIamIn === roomId) {console.log("Returnnon in join 'cause roomIamIn is the same as roomId");return};
 
         //check if player is allow in this room
@@ -199,9 +201,6 @@ const Game = () => {
                                 placeholder="Enter room name..."
                             />
                         </div>
-                        <div>
-
-                        </div>
                     </div>
                 ) : (
                     <div className="flex flex-wrap gap-2">
@@ -209,17 +208,80 @@ const Game = () => {
                             <button 
                                 key={index} 
                                 onClick={() => joinRoom(rooms, rooms.roomId)}
-                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
+                                className="group relative w-64 h-28 bg-gradient-to-br from-cyan-500 via-blue-600 to-purple-700 hover:from-cyan-400 hover:via-blue-500 hover:to-purple-600 border-2 border-cyan-400/50 text-white rounded-xl shadow-lg hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden"
                             >
-                                {rooms.roomId}  {" "}
-                                {rooms.players.find(p => p.isPlayer1)?.username} vs {rooms.aiEnabled ? '🤖'  : rooms.players.find(p => !p.isPlayer1)?.username} 
+                                {/* Neon glow effect */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                
+                                {/* Status indicator */}
+                                <div className="absolute top-2 right-2 z-20">
+                                    <span className="flex h-3 w-3">
+                                        <span className="animate-ping absolute h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                                        <span className="relative rounded-full h-full w-full bg-cyan-300"></span>
+                                    </span>
+                                </div>
+                                
+                                {/* Content */}
+                                <div className="relative z-10 h-full flex flex-col justify-center items-center px-4">
+                                    <h1 className="text-2xl font-bold mb-2 truncate w-full text-center text-white">{rooms.roomId}</h1>
+                                    <div className="text-sm font-medium text-cyan-100 truncate w-full text-center">
+                                        {rooms.players.find(p => p.isPlayer1)?.username} vs {rooms.aiEnabled ? '🤖' : rooms.players.find(p => !p.isPlayer1)?.username}
+                                    </div>
+                                </div>
                             </button>
                         ))}
+                        <button onClick={() => setCreateNewGame(true)} className="group relative w-64 h-28 bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 hover:from-emerald-400 hover:via-teal-500 hover:to-cyan-600 border-2 border-emerald-400/50 text-white rounded-xl shadow-lg hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden">
+                            {/* Glow effect */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-cyan-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            
+                            {/* Plus icon indicator */}
+                            <div className="absolute top-2 right-2 z-20">
+                                <span className="text-2xl text-emerald-300">+</span>
+                            </div>
+                            
+                            {/* Content */}
+                            <div className="relative z-10 h-full flex flex-col justify-center items-center px-4">
+                                <div className="text-3xl mb-2">🎮</div>
+                                <h1 className="text-xl font-bold text-center text-white">Create New Room</h1>
+                            </div>
+                        </button>
                     </div>
                 )}
             </div>
 
-            {roomIamIn &&
+            {
+                (createNewGame && roomsPlayerIsIn.length > 0) && 
+                    <div className="mb-6 flex flex-col items-center justify-center">
+                        <div className="flex flex-col gap-6">
+                            <div className="relative mt-14 px-8 py-4 bg-gray-700 hover:bg-gray-600 text-white text-2xl font-semibold rounded-lg shadow-lg flex justify-center">
+                                <button onClick={() => setChooseOponent(!chooseOponent)} className="w-full">Opponent { oponent === 'robocot' ? '🤖' : '👤'}</button>
+                                {chooseOponent &&
+                                <div className="absolute w-full flex flex-col -bottom-36 bg-gray-800 rounded-lg gap-1 z-50">
+                                    <button onClick={() => {setChooseOponent(false); setOponent('robocot')}} className={`bg-gray-700 py-3 rounded-lg hover:bg-gray-600 border-4 ${oponent === 'robocot' ? 'border-pong-green/80' : 'border-gray-600'}`}>🤖</button>
+                                    <button onClick={() => {setChooseOponent(false); setOponent('human')}} className={`bg-gray-700 py-3 rounded-lg hover:bg-gray-600 border-4 ${oponent === 'human' ? 'border-pong-green/80' : 'border-gray-600'}`}>👤</button>
+                                </div>
+                                }
+                            </div>
+                            <button 
+                                onClick={() => createGame()}
+                                className="mt-2 px-8 py-4 bg-pong-green/70 hover:bg-pong-green/90 text-white text-2xl font-semibold rounded-lg shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
+                            >
+                                Start Game
+                            </button>
+                            <div className="flex bg-gray-800 justify-center items-center rounded-md p-2">
+                                <span className="text-white/80 px-4">Room Name </span>
+                                <input 
+                                    className="px-4 py-2 rounded-lg border-2 border-gray-600 bg-white/70 text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
+                                    value={gameName} 
+                                    onChange={(e) => setGameName(e.target.value)}
+                                    placeholder="Enter room name..."
+                                />
+                            </div>
+                        </div>
+                    </div>
+            }
+
+            {(roomIamIn && !createNewGame) &&
                 <div className="mb-6">
                     { isAiEnabled &&
                     <div className="flex flex-col items-center gap-4 mb-6">
