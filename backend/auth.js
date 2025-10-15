@@ -101,6 +101,9 @@ export async function login(req, reply) {
     return reply.code(401).send({ error: 'Invalid credentials' });
   }
 
+  if (user.isOnline === true)
+    return reply.code(409).send({ error: 'You are already logged in' });
+
   // Update online status
   await user.update({ isOnline: true, lastSeen: new Date() });
 
@@ -109,6 +112,36 @@ export async function login(req, reply) {
     username: user.username, 
     displayName: user.displayName 
   });
+
+  const friends = await Friendship.findAll({
+    where: {
+      [Op.or]: [
+        {userId: user.id, status: 'accepted'},
+        {friendId: user.id, status: 'accepted'}
+      ]
+    },
+    include: [
+      {
+        model: User,
+        as: 'User',
+        attributes: ["id"]
+      },
+      {
+        model: User,
+        as: 'Friend',
+        attributes: ["id"]
+      }
+    ]
+  })
+
+  if (friends) {
+    const friendId = friends.map(friend => friend.userId === user.id ? friend.Friend.id : friend.User.id)
+    friendId.forEach(friend => {
+      console.log(`Sending im loggins to friend with the id :${friend}`)
+      req.server.io.to(friend).emit("friendConnected", {username: user.username, id: user.id})
+    })
+  }
+
   reply.send({ token, user: { id: user.id, username: user.username, displayName: user.displayName } });
 }
 
@@ -116,6 +149,42 @@ export async function logout(req, reply) {
   const user = await User.findByPk(req.user.id);
   if (user) {
     await user.update({ isOnline: false, lastSeen: new Date() });
+  }
+  const friends = await Friendship.findAll({
+    where: {
+      [Op.and]: [
+        {
+          status: 'accepted'
+        },
+        {
+          [Op.or] :[
+            {userId: req.user.id},
+            {friendId: req.user.id}
+          ]
+        }
+      ]
+
+    },
+    include: [
+      {
+        model: User,
+        as: 'User',
+        attributes: ["id"]
+      },
+      {
+        model: User,
+        as: 'Friend',
+        attributes: ["id"]
+      }
+    ]
+  })
+  if (friends) {
+    const friendsId = friends.map(friend => (friend.userId === req.user.id ? friend.Friend.id : friend.User.id));
+
+    friendsId.forEach(friend => {
+      console.log(`Im loging out my friend ID is ----------->>> ${friend}`);
+      req.server.io.to(friend).emit("friendLogout", {username: user.username, id: user.id})
+    })
   }
   reply.send({ message: 'Logged out successfully' });
 }

@@ -14,6 +14,7 @@ const Game = () => {
     const [oponent, setOponent] = useState('robocot')
     const [difficultyLevel, setDifficultyLevel] = useState('');
     const [createNewGame, setCreateNewGame] = useState(false);
+    const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
 
     const canvasRef = useRef(null);
@@ -80,7 +81,7 @@ const Game = () => {
         ctx.strokeRect(gameState.player2.x - 1, gameState.player2.y - 1, gameState.player2.width + 2, gameState.player2.height + 2);
     }
     const player1Name = gameState.players.find(player => player.isPlayer1)?.username;
-    const player2Name = gameState.players.filter(player => !player.isPlayer1)?.username;
+    const player2Name = gameState.players.find(player => !player.isPlayer1)?.username;
     setPlayersScores({player1Score: gameState.player1.score, player1Name, player2Score: gameState.player2.score, player2Name})
     if (difficultyLevel !== gameState.aiDifficulty)
         setDifficultyLevel(gameState.aiDifficulty)
@@ -167,6 +168,12 @@ const Game = () => {
         socket.emit("joinRoomGame", roomId)
         //setRoomIamIn to triger socket.emit("roomImIn", roomIamIn) so the server knows which room should update
         setRoomIamIn(roomId);
+        if ((room.players.length === 2 || room.aiEnabled)) {
+            setWaitingForOpponent(false);
+        } else {
+            setWaitingForOpponent(true);
+            setGameState(null);
+        }
     }       
 
     return (
@@ -203,46 +210,46 @@ const Game = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                         {roomsPlayerIsIn.map((rooms, index) => (
                             <button 
                                 key={index} 
                                 onClick={() => joinRoom(rooms, rooms.roomId)}
-                                className="group relative w-64 h-28 bg-gradient-to-br from-cyan-500 via-blue-600 to-purple-700 hover:from-cyan-400 hover:via-blue-500 hover:to-purple-600 border-2 border-cyan-400/50 text-white rounded-xl shadow-lg hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden"
+                                className="group relative w-64 h-28 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 hover:from-slate-600 hover:via-slate-700 hover:to-slate-800 border border-emerald-500/30 hover:border-emerald-400/50 text-white rounded-lg shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 overflow-hidden"
                             >
-                                {/* Neon glow effect */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                {/* Subtle accent line */}
+                                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent"></div>
                                 
                                 {/* Status indicator */}
-                                <div className="absolute top-2 right-2 z-20">
-                                    <span className="flex h-3 w-3">
-                                        <span className="animate-ping absolute h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                                        <span className="relative rounded-full h-full w-full bg-cyan-300"></span>
+                                <div className="absolute top-3 right-3">
+                                    <span className="flex h-2.5 w-2.5">
+                                        <span className="animate-ping absolute h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span className="relative rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                                     </span>
                                 </div>
                                 
                                 {/* Content */}
-                                <div className="relative z-10 h-full flex flex-col justify-center items-center px-4">
-                                    <h1 className="text-2xl font-bold mb-2 truncate w-full text-center text-white">{rooms.roomId}</h1>
-                                    <div className="text-sm font-medium text-cyan-100 truncate w-full text-center">
-                                        {rooms.players.find(p => p.isPlayer1)?.username} vs {rooms.aiEnabled ? '🤖' : rooms.players.find(p => !p.isPlayer1)?.username}
+                                <div className="relative h-full flex flex-col justify-center items-start px-4 pt-2">
+                                    <h1 className="text-xl font-bold mb-1 truncate w-full text-white">{rooms.roomId}</h1>
+                                    <div className="text-sm text-gray-300 truncate w-full">
+                                        {rooms.players.find(p => p.isPlayer1)?.username} <span className="text-emerald-400">vs</span> {rooms.aiEnabled ? '🤖' : rooms.players.find(p => !p.isPlayer1)?.username ? rooms.players.find(p => !p.isPlayer1)?.username : 'waiting...'}
                                     </div>
                                 </div>
                             </button>
                         ))}
-                        <button onClick={() => setCreateNewGame(true)} className="group relative w-64 h-28 bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 hover:from-emerald-400 hover:via-teal-500 hover:to-cyan-600 border-2 border-emerald-400/50 text-white rounded-xl shadow-lg hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden">
-                            {/* Glow effect */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-cyan-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <button onClick={() => setCreateNewGame(true)} className="group relative w-64 h-28 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 hover:from-slate-600 hover:via-slate-700 hover:to-slate-800 border-2 border-dashed border-amber-500/40 hover:border-amber-400/60 text-white rounded-lg shadow-lg hover:shadow-amber-500/20 transition-all duration-200 overflow-hidden">
+                            {/* Accent line */}
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent"></div>
                             
-                            {/* Plus icon indicator */}
-                            <div className="absolute top-2 right-2 z-20">
-                                <span className="text-2xl text-emerald-300">+</span>
+                            {/* Plus icon */}
+                            <div className="absolute top-3 right-3">
+                                <span className="text-xl text-amber-400/70 group-hover:text-amber-400">+</span>
                             </div>
                             
                             {/* Content */}
-                            <div className="relative z-10 h-full flex flex-col justify-center items-center px-4">
-                                <div className="text-3xl mb-2">🎮</div>
-                                <h1 className="text-xl font-bold text-center text-white">Create New Room</h1>
+                            <div className="relative h-full flex flex-col justify-center items-center px-4 pt-2">
+                                <div className="text-3xl mb-2 opacity-70 group-hover:opacity-90 transition-opacity">🎮</div>
+                                <h1 className="text-lg font-semibold text-center text-gray-300 group-hover:text-white transition-colors">Create New Room</h1>
                             </div>
                         </button>
                     </div>
@@ -313,6 +320,19 @@ const Game = () => {
                         </div>
                     </div>
                     }
+                    {
+                        waitingForOpponent && 
+                        <div className="flex flex-col justify-center items-center py-12 gap-4">
+                            <div className="text-center">
+                                <h2 className="text-2xl font-bold text-white">Waiting for opponent...</h2>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-cyan-300 text-sm animate-pulse">🎮 Get ready to play!</p>
+                            </div>
+
+                        </div>
+                    }
+                    { waitingForOpponent === false &&
                     <div>
                         <div className="mb-4 flex justify-center items center">
                             <span className="bg-gradient-to-br from-blue-600 to-blue-950 w-6/12 h-16 gap-2 flex justify-evenly items-center rounded-2xl text-xl font-semibold text-white overflow-hidden">
@@ -326,6 +346,7 @@ const Game = () => {
                             </span>
                         </div>
                     </div>
+                    }
                     <div className="overflow-x-auto">
                         <div className="flex justify-center min-w-max">
                             <canvas 

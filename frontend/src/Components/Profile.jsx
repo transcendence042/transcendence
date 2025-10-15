@@ -1,8 +1,10 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../Context/AuthContext';
+import { ComponentContext } from '../Context/ComponentsContext';
 
 const Profile = () => {
     const { token, language, lan} = useContext(AuthContext);
+    const {socket} = useContext(ComponentContext)
     const [profile, setProfile] = useState({
         username: '',
         displayName: '',
@@ -163,6 +165,28 @@ const Profile = () => {
         setFriendUsername('');
     };
 
+    useEffect( () => {
+        if (!socket) return;
+
+        const checkFriendLogOut = (data) => {
+            console.log(`friend -> ${data.username} with ID: ${data.id} just left!`)
+            loadFriends();
+        }
+        const checkFriendLogin = (data) => {
+            console.log(`Friend (${data.username}) with ID: ${data.id} has connected!`)
+            loadFriends();
+        }
+
+        socket.on("friendLogout", checkFriendLogOut)
+        socket.on("friendConnected", checkFriendLogin)
+
+        return () => {
+            socket.off("friendLogout", checkFriendLogOut)
+            socket.off("friendConnected", checkFriendLogin)
+        }
+
+    }, [socket])
+
 
     return (
 
@@ -170,7 +194,7 @@ const Profile = () => {
 
                 {/* Profile Section */}
                 <section>
-                    <h2 className="text-3xl font-bold text-pong-green mb-6">{language[lan].ProfileWelcome}</h2>
+                    <h2 className="text-3xl font-bold text-pong-green mb-6">{language[lan].profileWelcome}</h2>
                     <div className="bg-gray-800 border border-gray-700 rounded-lg p-5 flex flex-col md:flex-row gap-8 shadow">
                         
                         {/* Avatar + Actions */}
@@ -283,7 +307,7 @@ const Profile = () => {
                                             />
                                             <span className='mx-5'>{friend.username}</span>
                                             <span className={`text-sm ${friend.isOnline ? 'text-green-400' : 'text-red-500'} ml-auto`}>
-                                                {friend.isOnline ? `🟢 ${language[lan].profileIsOnilne}` : `⚫ ${language[lan].profileIsOffline}`}
+                                                {friend.isOnline ? `🟢 ${language[lan].profileIsOnline}` : `⚫ ${language[lan].profileIsOffline}`}
                                             </span>
                                         </div>
                                     ))
@@ -294,7 +318,7 @@ const Profile = () => {
 
                     {/* Match History */}
                     <div>
-                        <h2 className="text-2xl font-bold text-pong-green mb-4">{language[lan].MatchHistory}</h2>
+                        <h2 className="text-2xl font-bold text-pong-green mb-4">{language[lan].profileMatchHistory}</h2>
                         <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 shadow max-h-96 overflow-y-auto">
                             <div className="space-y-3">
                                 {matchHistory.length === 0 ? (

@@ -1,9 +1,15 @@
 import { AuthContext } from "../Context/AuthContext"
-import { useContext, useEffect } from "react"
+import { ComponentContext } from "../Context/ComponentsContext"
+import { useContext, useEffect, useRef } from "react"
 
 const Logout = () => {
 const {setToken, setLoading} = useContext(AuthContext)
+const hasLoggedOut = useRef(false);
+
     useEffect(() => {
+        if (hasLoggedOut.current) return;
+        hasLoggedOut.current = true;
+
         const handleLogout = async () => {
             setLoading(true);
             const token = localStorage.getItem('token');
