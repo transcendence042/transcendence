@@ -39,6 +39,10 @@ export const User = sequelize.define('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  sessions: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  }
 });
 
 export const Friendship = sequelize.define('Friendship', {

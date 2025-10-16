@@ -175,7 +175,7 @@ const Components = () => {
                 <input 
                   value={inputSearch} 
                   onChange={(e) => setInputSearch(e.target.value)} 
-                  placeholder='Search players, matches...' 
+                  placeholder={language[lan].Searcher}
                   className='flex-1 h-10 px-4 bg-slate-800 text-white placeholder-gray-500 rounded-r-lg border border-l-0 border-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all'
                 />
               </div>
@@ -205,14 +205,14 @@ const Components = () => {
                     <div className='flex items-center justify-between p-5 border-b border-slate-700/50 bg-slate-800/50'>
                       <h3 className='text-xl font-bold text-white flex items-center gap-2'>
                         <span className="text-emerald-400">🔔</span>
-                        Notifications
+                        {language[lan].Notifications}
                       </h3>
                       {notifications > 0 && (
                         <button 
                           onClick={clearNotifications}
                           className='text-xs font-semibold text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all'
                         >
-                          Clear all
+                          {language[lan].NotyClearAll}
                         </button>
                       )}
                     </div>
@@ -253,8 +253,8 @@ const Components = () => {
                       ) : (
                         <div className='p-12 text-center'>
                           <FaBell size={56} className='mx-auto mb-4 text-gray-700'/>
-                          <p className="text-gray-400 font-medium">No new notifications</p>
-                          <p className="text-gray-600 text-sm mt-2">You're all caught up!</p>
+                          <p className="text-gray-400 font-medium">{language[lan].NotyNoNewNotications}</p>
+                          <p className="text-gray-600 text-sm mt-2">{language[lan].NotyYoureCaughtUp}</p>
                         </div>
                       )}
                     </div>
@@ -263,7 +263,7 @@ const Components = () => {
                     {notificationsList.length > 0 && (
                       <div className='p-4 border-t border-slate-700/50 text-center bg-slate-800/30'>
                         <button className='text-sm font-semibold text-cyan-400 hover:text-cyan-300 hover:underline transition-colors'>
-                          View all notifications →
+                          {language[lan].NotyViewAllNotications}
                         </button>
                       </div>
                     )}

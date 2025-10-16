@@ -17,6 +17,12 @@ export function AuthContextProvider({children}) {
             FriendRequest: 'Friend Request',
             Settings: 'settings',
             Logout: 'logout',
+            Searcher: 'Search players, matches...',
+            Notifications: 'Notifications',
+            NotyClearAll: 'Clear all',
+            NotyNoNewNotications: 'No new notifications',
+            NotyYoureCaughtUp: "You're all caught up!",
+            NotyViewAllNotications: 'View all notifications →',
             
             // Profile Section
             profileWelcome: 'My Profile',
@@ -35,7 +41,7 @@ export function AuthContextProvider({children}) {
             profileFriends: 'Friends',
             profilePHenterUsername: 'Enter Username',
             profileAddFriend: 'Add Friend',
-            profileNoFriendsYet: 'No friends yet',
+            profileNoFriendsYet: 'No Friend Requests',
             profileIsOnline: 'Online',
             profileIsOffline: 'Offline',
             profileMatchHistory: 'Match History',
@@ -49,6 +55,14 @@ export function AuthContextProvider({children}) {
             frDeclineFriend: 'Decline',
             frNoFriendRequest: 'No Friend Requests',
             frNoFriendRequestMsg: "You don't have any friend requests at the moment.",
+
+
+            //Matches
+
+            matchesROOMSRUNNING: 'ROOMS RUNNING',
+            matchesNoActiveRooms: 'No Active Rooms',
+            matchesNoActiveRoomsMsg: 'There are currently no game rooms running. Be the first to create one!',
+            matchesNoActiveRoomsAdvice: 'Start a new game to see it appear here'
         },
         // Portuguese
         pt: {

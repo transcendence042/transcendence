@@ -101,11 +101,8 @@ export async function login(req, reply) {
     return reply.code(401).send({ error: 'Invalid credentials' });
   }
 
-  if (user.isOnline === true)
-    return reply.code(409).send({ error: 'You are already logged in' });
-
   // Update online status
-  await user.update({ isOnline: true, lastSeen: new Date() });
+  await user.update({ isOnline: true, lastSeen: new Date(), sessions: (user.sessions || 0) + 1 });
 
   const token = req.server.jwt.sign({ 
     id: user.id, 
@@ -148,7 +145,14 @@ export async function login(req, reply) {
 export async function logout(req, reply) {
   const user = await User.findByPk(req.user.id);
   if (user) {
-    await user.update({ isOnline: false, lastSeen: new Date() });
+    // Decrement session count
+    const newSessionCount = Math.max(0, (user.sessions || 0) - 1);
+    
+    await user.update({ 
+      sessions: newSessionCount,
+      isOnline: newSessionCount > 0, // Only go offline if no sessions left
+      lastSeen: new Date() 
+    });
   }
   const friends = await Friendship.findAll({
     where: {

@@ -6,7 +6,7 @@ import { FaLock, FaUnlock } from "react-icons/fa";
 
 const Matches = () => {
     const {roomsRunning, setRoomIamIn, roomIamIn, socket, setWaitingForOpponent} = useContext(ComponentContext);
-    const {user} = useContext(AuthContext)
+    const {user, language, lan} = useContext(AuthContext)
     const navigate = useNavigate();
 
     const joinRoom = (room, roomId) => {
@@ -34,17 +34,17 @@ const Matches = () => {
 
     return (
         <div className="text-white flex flex-col justify-center items-center">
-            <h1 className="mb-10 font-bold text-3xl">ROOMS RUNNING</h1>
+            <h1 className="mb-10 font-bold text-3xl">{language[lan].matchesROOMSRUNNING}</h1>
             {roomsRunning.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 px-8">
                         <div className="bg-slate-800/50 rounded-2xl border border-slate-600 p-12 text-center max-w-md">
                             <div className="text-6xl mb-6 opacity-30">🎮</div>
-                            <h2 className="text-2xl font-bold text-white mb-4">No Active Rooms</h2>
+                            <h2 className="text-2xl font-bold text-white mb-4">{language[lan].matchesNoActiveRooms}</h2>
                             <p className="text-gray-400 text-lg mb-6">
-                                There are currently no game rooms running. Be the first to create one!
+                                {language[lan].matchesNoActiveRoomsMsg}
                             </p>
                             <div className="text-sm text-slate-400">
-                                Start a new game to see it appear here
+                                {language[lan].matchesNoActiveRoomsAdvice}
                             </div>
                         </div>
                     </div>

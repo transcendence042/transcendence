@@ -48,7 +48,7 @@ const FriendRequest = () => {
             <div className="mb-8">
                 <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 mb-2 tracking-tight flex items-center gap-3">
                     <span>👋</span>
-                    {language[lan].NoFriendRequests || "Friend Requests"}
+                    {language[lan].profileNoFriendsYet}
                 </h1>
                 <p className="text-gray-400 text-sm">{language[lan].frNoFriendRequestMsg || "Manage your incoming friend requests"}</p>
             </div>
@@ -108,7 +108,7 @@ const FriendRequest = () => {
                         <div className="flex flex-col items-center justify-center">
                             <div className="text-7xl mb-6 opacity-50">📭</div>
                             <h1 className='text-2xl font-bold text-white/90 mb-2'>
-                                {language[lan].NoFriendRequests || "No Friend Requests"}
+                                {language[lan].frNoFriendRequest}
                             </h1>
                             <p className="text-gray-400 max-w-md">
                                 {language[lan].frNoFriendRequestMsg || "You don't have any pending friend requests at the moment. When someone sends you a request, it will appear here."}
