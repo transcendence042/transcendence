@@ -2,7 +2,7 @@ import { useContext, useState } from "react"
 import { AuthContextProvider, AuthContext } from "../Context/AuthContext"
 import { useNavigate } from "react-router-dom"
 
-const RegisterForm = () => {
+const RegisterForm = ({setForm}) => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -22,6 +22,7 @@ const RegisterForm = () => {
             });
             if (res.ok) {
                 alert("Registration successfully! You can now login");
+                setForm('loginForm')
             } else {
                 const result = await res.json();
                 alert(result.error || "Registration failed");
@@ -138,7 +139,7 @@ const Login = () => {
                     </button>
                 </div>
                 {form === 'loginForm' && <LoginForm setToken={setToken} setLoading={setLoading}/>}
-                {form === 'registerForm' && <RegisterForm/>}
+                {form === 'registerForm' && <RegisterForm setForm={setForm}/>}
             </div>
         </div>
     )

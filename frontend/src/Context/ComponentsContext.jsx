@@ -10,6 +10,7 @@ export function ComponentContextProvider({children}) {
     const [roomsRunning, setRoomsRunning] = useState([]);
     const [roomIamIn, setRoomIamIn] = useState('');
     const [isAiEnabled, setIsAiEnabled] = useState(false);
+    const [waitingForOpponent, setWaitingForOpponent] = useState(true);
     
     const {token, user} = useContext(AuthContext)
     const socketRef = useRef(null);
@@ -113,6 +114,8 @@ export function ComponentContextProvider({children}) {
             setRoomIamIn,
             isAiEnabled,
             setIsAiEnabled,
+            waitingForOpponent,
+            setWaitingForOpponent,
         }}>
             {children}
         </ComponentContext.Provider>

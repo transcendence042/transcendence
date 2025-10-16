@@ -607,12 +607,12 @@ async function updateGame(gameState, roomId) {
     if (gameState.ball.x < 0) { 
         gameState.player2.score++; 
         resetBall(gameState);
-        if (gameState.player2.score >= 20) gameEnded = true;
+        if (gameState.player2.score >= 5) gameEnded = true;
     }
     else if (gameState.ball.x > 800) { 
         gameState.player1.score++; 
         resetBall(gameState);
-        if (gameState.player1.score >= 20) gameEnded = true;
+        if (gameState.player1.score >= 5) gameEnded = true;
     }
 
     // Save match when game ends
@@ -655,7 +655,7 @@ async function updateGame(gameState, roomId) {
                 await loserUser.update({ losses: loserUser.losses + 1 });
             }
         }
-		io.to(roomId).emit("gameEnded", roomId);
+		io.to(roomId).emit("gameEnded", {roomId});
 		
 		// Make all sockets leave the Socket.IO room before deleting
         // with io.sockets.sockets with access to all sockets created: io -> (chosen) sockets (both fixed)

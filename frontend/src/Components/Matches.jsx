@@ -5,12 +5,16 @@ import { useNavigate } from "react-router-dom";
 import { FaLock, FaUnlock } from "react-icons/fa";
 
 const Matches = () => {
-    const {roomsRunning, setRoomIamIn, roomIamIn, socket} = useContext(ComponentContext);
+    const {roomsRunning, setRoomIamIn, roomIamIn, socket, setWaitingForOpponent} = useContext(ComponentContext);
     const {user} = useContext(AuthContext)
     const navigate = useNavigate();
 
     const joinRoom = (room, roomId) => {
         //check if player is already in this room
+        alert(`joining room from matches the room.length is: ${room.players.length} aiEnabled: ${room.aiEnabled}`)
+        if (room.players.length > 1 || room.aiEnabled) {
+            setWaitingForOpponent(false)
+        }
         if (roomIamIn === roomId) {
             console.log("Returnnon in join 'cause roomIamIn is the same as roomId")
             navigate('index/game')

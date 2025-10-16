@@ -6,7 +6,7 @@ const Game = () => {
 
     const {user} = useContext(AuthContext)
     const [gameName, setGameName] = useState(user.username);
-    const {socket, roomsRunning, roomIamIn, setRoomIamIn, isAiEnabled, setIsAiEnabled} = useContext(ComponentContext);
+    const {socket, roomsRunning, roomIamIn, setRoomIamIn, isAiEnabled, setIsAiEnabled, waitingForOpponent, setWaitingForOpponent} = useContext(ComponentContext);
     const [roomsPlayerIsIn, setRoomPlayerIsIn] = useState([]);
     const [gameState, setGameState] = useState(null);
     const [playersScores, setPlayersScores] = useState({});
@@ -14,7 +14,6 @@ const Game = () => {
     const [oponent, setOponent] = useState('robocot')
     const [difficultyLevel, setDifficultyLevel] = useState('');
     const [createNewGame, setCreateNewGame] = useState(false);
-    const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
 
     const canvasRef = useRef(null);
@@ -27,9 +26,9 @@ const Game = () => {
 }, [roomsRunning, user.id]);
 
     useEffect ( () => {
-    if (!gameState) {console.log("returning before rendering!!!"); return;}
+    if (!gameState) {console.log(`Settign to trth the waitingForOpponenet in room: ${roomIamIn}`); setWaitingForOpponent(true);return};
     const canvas = canvasRef.current;
-    if (!canvas) {console.log("Returning in !canvas"); return};
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -82,17 +81,23 @@ const Game = () => {
     }
     const player1Name = gameState.players.find(player => player.isPlayer1)?.username;
     const player2Name = gameState.players.find(player => !player.isPlayer1)?.username;
-    setPlayersScores({player1Score: gameState.player1.score, player1Name, player2Score: gameState.player2.score, player2Name})
+    setPlayersScores({player1Score: gameState.player1?.score, player1Name, player2Score: gameState.player2?.score, player2Name})
     if (difficultyLevel !== gameState.aiDifficulty)
         setDifficultyLevel(gameState.aiDifficulty)
+    if (waitingForOpponent) setWaitingForOpponent(false)
 }, [gameState, roomIamIn])
 
     const createGame = () => {
         if (gameName === '') {alert("game Name cannot be empty");return};
         if (!socket) return;
         const mode = oponent === 'robocot' ? 'AI' : 'Human'
-        //alert(`CreateGame! Oponent: ${mode} roomName: ${gameName}`);
+        alert(`CreateGame! Oponent: ${mode} roomName: ${gameName}`);
         //return;
+
+        //Is the mode is AI setWaitingForOpponent flase so the user can start playing!!!
+        if (mode === 'AI') {alert(`In create Game setWaiting for oppoenent to false`), setWaitingForOpponent(false)}
+        else if (mode === 'Human') {alert(`In Create Game setWaiting for oppoenent to true`), setWaitingForOpponent(true)}
+
         socket.emit("createRoom", gameName, {mode})
         setGameName('');
         joinRoom(null, gameName);
@@ -168,12 +173,17 @@ const Game = () => {
         socket.emit("joinRoomGame", roomId)
         //setRoomIamIn to triger socket.emit("roomImIn", roomIamIn) so the server knows which room should update
         setRoomIamIn(roomId);
-        if ((room.players.length === 2 || room.aiEnabled)) {
-            setWaitingForOpponent(false);
-        } else {
-            setWaitingForOpponent(true);
-            setGameState(null);
+
+        if (room) {
+            if ((room.players.length > 1 || room.aiEnabled)) {
+                alert(`Setting waitForOpponent to false in room: ${roomId}`)
+                setWaitingForOpponent(false);
+            } else {
+                alert(`Setting waitForOpponent to true in room: ${roomId}`)
+                setWaitingForOpponent(true);
+            }
         }
+        setWaitingForOpponent(true);
     }       
 
     return (
@@ -321,7 +331,8 @@ const Game = () => {
                     </div>
                     }
                     {
-                        waitingForOpponent && 
+                        waitingForOpponent ? 
+                        (
                         <div className="flex flex-col justify-center items-center py-12 gap-4">
                             <div className="text-center">
                                 <h2 className="text-2xl font-bold text-white">Waiting for opponent...</h2>
@@ -331,34 +342,37 @@ const Game = () => {
                             </div>
 
                         </div>
-                    }
-                    { waitingForOpponent === false &&
-                    <div>
-                        <div className="mb-4 flex justify-center items center">
-                            <span className="bg-gradient-to-br from-blue-600 to-blue-950 w-6/12 h-16 gap-2 flex justify-evenly items-center rounded-2xl text-xl font-semibold text-white overflow-hidden">
-                                <h1 className="text-2xl font-bold text-white/90">{playersScores.player1Name}</h1>
-                                <div className="gap">
-                                    <span className="mr-6 text-2xl font-bold">{playersScores.player1Score}</span> 
-                                    : 
-                                    <span className="ml-6 text-2xl font-bold">{playersScores.player2Score}</span>
+                        )
+                        :
+                        (
+                            <div>
+                                <div className="mb-4 flex justify-center items center">
+                                    <span className="bg-gradient-to-br from-blue-600 to-blue-950 w-6/12 h-16 gap-2 flex justify-evenly items-center rounded-2xl text-xl font-semibold text-white overflow-hidden">
+                                        <h1 className="text-2xl font-bold text-white/90">{playersScores.player1Name}</h1>
+                                        <div className="gap">
+                                            <span className="mr-6 text-2xl font-bold">{playersScores.player1Score}</span> 
+                                            : 
+                                            <span className="ml-6 text-2xl font-bold">{playersScores.player2Score}</span>
+                                        </div>
+                                        <h1>{isAiEnabled ? '🤖' : playersScores.player2Name}</h1>
+                                    </span>
                                 </div>
-                                <h1>{isAiEnabled ? '🤖' : playersScores.player2Name}</h1>
-                            </span>
-                        </div>
-                    </div>
+                            </div>
+                        )
                     }
-                    <div className="overflow-x-auto">
-                        <div className="flex justify-center min-w-max">
-                            <canvas 
-                                className="bg-black border-4 border-gray-700 rounded-lg shadow-2xl cursor-none" 
-                                ref={canvasRef} 
-                                width={800} 
-                                height={400} 
-                                id="gameCanvas" 
-                                onMouseMove={handleMouseMove}
-                            />
-                        </div>
+                    
+                    <div className={`overflow-x-auto ${waitingForOpponent && 'hidden'}`}>
+                    <div className="flex justify-center min-w-max">
+                        <canvas 
+                            className="bg-black border-4 border-gray-700 rounded-lg shadow-2xl cursor-none" 
+                            ref={canvasRef} 
+                            width={800} 
+                            height={400} 
+                            id="gameCanvas" 
+                            onMouseMove={handleMouseMove}/>
                     </div>
+                    </div>
+
                </div>
             }
         </div>

@@ -95,101 +95,181 @@ const Components = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className='flex'>
-          <nav className='flex flex-col top-0 left-0 w-28 min-h-screen bg-gray-800 text-white'>
-            <button className='w-28 h-16 flex justify-center items-center text-3xl border-[1] border-white hover:bg-gray-900' onClick={() => navigate('/index')}>42</button>
-            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/game')}>{language[lan].Game}</button>
-            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/matches')}>Matches</button>
-            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/profile')}>{language[lan].Profile}</button>
-            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/friendRequest')}>{language[lan].FriendRequest}</button>
-            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/settings')}>{language[lan].Settings}</button>
-            <button className='w-28 h-16 hover:bg-gray-900' onClick={() => navigate('/index/logout')}>{language[lan].Logout}</button>
+          {/* Modern Sidebar Navigation */}
+          <nav className='flex flex-col top-0 left-0 w-20 lg:w-24 min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-emerald-500/10 shadow-2xl shadow-emerald-500/5'>
+            {/* Logo/Home */}
+            <button 
+              className='group relative w-full h-20 flex flex-col justify-center items-center text-3xl lg:text-4xl font-black border-b border-slate-700/50 hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-cyan-500/10 transition-all duration-300 overflow-hidden' 
+              onClick={() => navigate('/index')}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 group-hover:from-emerald-300 group-hover:to-cyan-300 transition-all">42</span>
+            </button>
+
+            {/* Navigation Items */}
+            <button 
+              className='group relative w-full h-16 flex flex-col justify-center items-center text-xs lg:text-sm font-medium text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-transparent border-l-2 border-transparent hover:border-emerald-400 transition-all duration-200' 
+              onClick={() => navigate('/index/game')}
+            >
+              <span className="text-xl mb-1">🎮</span>
+              <span className="hidden lg:block">{language[lan].Game}</span>
+            </button>
+
+            <button 
+              className='group relative w-full h-16 flex flex-col justify-center items-center text-xs lg:text-sm font-medium text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-transparent border-l-2 border-transparent hover:border-cyan-400 transition-all duration-200' 
+              onClick={() => navigate('/index/matches')}
+            >
+              <span className="text-xl mb-1">🏆</span>
+              <span className="hidden lg:block">Matches</span>
+            </button>
+
+            <button 
+              className='group relative w-full h-16 flex flex-col justify-center items-center text-xs lg:text-sm font-medium text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-transparent border-l-2 border-transparent hover:border-blue-400 transition-all duration-200' 
+              onClick={() => navigate('/index/profile')}
+            >
+              <span className="text-xl mb-1">👤</span>
+              <span className="hidden lg:block">{language[lan].Profile}</span>
+            </button>
+
+            <button 
+              className='group relative w-full h-16 flex flex-col justify-center items-center text-xs lg:text-sm font-medium text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-transparent border-l-2 border-transparent hover:border-amber-400 transition-all duration-200' 
+              onClick={() => navigate('/index/friendRequest')}
+            >
+              <span className="text-xl mb-1">👥</span>
+              <span className="hidden lg:block">{language[lan].FriendRequest}</span>
+            </button>
+
+            <button 
+              className='group relative w-full h-16 flex flex-col justify-center items-center text-xs lg:text-sm font-medium text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-transparent border-l-2 border-transparent hover:border-purple-400 transition-all duration-200' 
+              onClick={() => navigate('/index/settings')}
+            >
+              <span className="text-xl mb-1">⚙️</span>
+              <span className="hidden lg:block">{language[lan].Settings}</span>
+            </button>
+
+            {/* Logout at bottom */}
+            <div className="mt-auto border-t border-slate-700/50">
+              <button 
+                className='group relative w-full h-16 flex flex-col justify-center items-center text-xs lg:text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-gradient-to-r hover:from-red-500/10 hover:to-transparent border-l-2 border-transparent hover:border-red-400 transition-all duration-200' 
+                onClick={() => navigate('/index/logout')}
+              >
+                <span className="text-xl mb-1">🚪</span>
+                <span className="hidden lg:block">{language[lan].Logout}</span>
+              </button>
+            </div>
           </nav>
 
           <div className='flex-1 min-w-0 flex flex-col'>
-            <div className='bg-gray-800 h-16 flex items-center justify-between px-4 md:px-8 gap-4'>
-              <div className='flex flex-1 max-w-md'>
-                <FaSearch className='bg-white/95 w-7 h-8 px-2 rounded-l-md flex justify-center items-center'/>
-                <input value={inputSearch} onChange={(e) => setInputSearch(e.target.value)} placeholder='search...' className='flex-1 h-8 p-2 text-xs rounded-r-md focus:outline-none focus:border-transparent'/>
+            {/* Modern Header */}
+            <div className='relative bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 h-16 flex items-center justify-between px-4 md:px-8 gap-4 border-b border-emerald-500/10 shadow-xl shadow-emerald-500/5'>
+              {/* Accent line */}
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent"></div>
+
+              {/* Search Bar */}
+              <div className='flex flex-1 max-w-md group'>
+                <div className='bg-slate-700 group-hover:bg-slate-600 transition-colors w-10 h-10 rounded-l-lg flex justify-center items-center border border-slate-600 group-focus-within:border-emerald-500/50'>
+                  <FaSearch className='text-gray-400 group-focus-within:text-emerald-400 transition-colors'/>
+                </div>
+                <input 
+                  value={inputSearch} 
+                  onChange={(e) => setInputSearch(e.target.value)} 
+                  placeholder='Search players, matches...' 
+                  className='flex-1 h-10 px-4 bg-slate-800 text-white placeholder-gray-500 rounded-r-lg border border-l-0 border-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all'
+                />
               </div>
 
               
-                                                            {/* Notifications Bell with Dropdown */}
-                                                            <div className='relative' ref={notificationRef}>
-                                                              <button 
-                                                                onClick={handleNotifications} 
-                                                                className='relative flex-shrink-0 hover:text-gray-300 transition'
-                                                              >
-                                                                <FaBell size={32}/>
-                                                                {notifications > 0 && (
-                                                                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                                                                    {notifications}
-                                                                  </span>
-                                                                )}
-                                                              </button>
+              {/* Notifications Bell with Dropdown */}
+              <div className='relative' ref={notificationRef}>
+                <button 
+                  onClick={handleNotifications} 
+                  className='group relative flex-shrink-0 w-12 h-12 rounded-lg bg-slate-700/50 hover:bg-slate-700 border border-slate-600 hover:border-emerald-500/50 flex items-center justify-center transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20'
+                >
+                  <FaBell size={20} className='text-gray-400 group-hover:text-emerald-400 transition-colors'/>
+                  {notifications > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse shadow-lg shadow-red-500/50 border-2 border-slate-900">
+                      {notifications}
+                    </span>
+                  )}
+                </button>
 
-                                                              {/* Dropdown Notification Panel */}
-                                                              {showNotifications && (
-                                                                <div className='absolute right-0 top-12 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl z-50'>
-                                                                  {/* Header */}
-                                                                  <div className='flex items-center justify-between p-4 border-b  border-gray-700'>
-                                                                    <h3 className='text-lg font-semibold text-white'>Notifications</h3>
-                                                                    {notifications > 0 && (
-                                                                      <button 
-                                                                        onClick={clearNotifications}
-                                                                        className='text-xs text-blue-400 hover:text-blue-300'
-                                                                      >
-                                                                        Mark all as read
-                                                                      </button>
-                                                                    )}
-                                                                  </div>
+                {/* Dropdown Notification Panel */}
+                {showNotifications && (
+                  <div className='absolute right-0 top-16 w-96 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border border-emerald-500/20 rounded-xl shadow-2xl shadow-emerald-500/10 z-50 overflow-hidden'>
+                    {/* Accent line */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent"></div>
 
-                                                                  {/* Notifications List */}
-                                                                  <div className='max-h-96 overflow-y-auto'>
-                                                                    {notificationsList.length > 0 ? (
-                                                                      notificationsList.map((notif) => (
-                                                                        <div 
-                                                                          key={notif.id}
-                                                                          className={`relative p-4 border-b ${!notif.status && 'bg-slate-900'} border-gray-700 hover:bg-gray-700 transition cursor-pointer`}
-                                                                          onClick={() => handleClickNotification(notif)}
-                                                                        >
-                                                                          <div className='flex items-start gap-3'>
-                                                                            <div className='w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0'></div>
-                                                                            <div className='flex-1'>
-                                                                              <p className='text-sm text-white'>
-                                                                                <span className='font-semibold text-pong-green'>{notif.user}</span>
-                                                                                {' '}{notif.msg}
-                                                                              </p>
-                                                                              <p className='text-xs text-gray-400 mt-1'>{getTimeAgo(Date.now() - notif.time)}</p>
-                                                                            </div>
-                                                                          </div>
-                                                                          <div className='absolute top-1 right-3'>
-                                                                            <button className='text-gray-400  rounded-full w-3 h-3 flex justify-center items-center'
-                                                                            onClick={() => deleteNotification(notif.id)}
-                                                                            >
-                                                                              x
-                                                                            </button>
-                                                                          </div>
-                                                                        </div>
-                                                                      ))
-                                                                    ) : (
-                                                                      <div className='p-8 text-center text-gray-400'>
-                                                                        <FaBell size={48} className='mx-auto mb-3 opacity-30'/>
-                                                                        <p>No new notifications</p>
-                                                                      </div>
-                                                                    )}
-                                                                  </div>
+                    {/* Header */}
+                    <div className='flex items-center justify-between p-5 border-b border-slate-700/50 bg-slate-800/50'>
+                      <h3 className='text-xl font-bold text-white flex items-center gap-2'>
+                        <span className="text-emerald-400">🔔</span>
+                        Notifications
+                      </h3>
+                      {notifications > 0 && (
+                        <button 
+                          onClick={clearNotifications}
+                          className='text-xs font-semibold text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all'
+                        >
+                          Clear all
+                        </button>
+                      )}
+                    </div>
 
-                                                                  {/* Footer */}
-                                                                  <div className='p-3 border-t border-gray-700 text-center'>
-                                                                    <button className='text-sm text-blue-400 hover:text-blue-300'>
-                                                                      View all notifications
-                                                                    </button>
-                                                                  </div>
-                                                                </div>
-                                                              )}
-            </div>
+                    {/* Notifications List */}
+                    <div className='max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900'>
+                      {notificationsList.length > 0 ? (
+                        notificationsList.map((notif) => (
+                          <div 
+                            key={notif.id}
+                            className={`group relative p-4 border-b border-slate-700/50 ${!notif.status ? 'bg-emerald-500/5' : 'bg-transparent'} hover:bg-slate-800/50 transition-all cursor-pointer`}
+                            onClick={() => handleClickNotification(notif)}
+                          >
+                            <div className='flex items-start gap-3 pr-6'>
+                              <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${notif.status ? 'bg-emerald-400 shadow-lg shadow-emerald-400/50' : 'bg-gray-600'}`}></div>
+                              <div className='flex-1'>
+                                <p className='text-sm text-white leading-relaxed'>
+                                  <span className='font-bold text-emerald-400'>{notif.user}</span>
+                                  {' '}{notif.msg}
+                                </p>
+                                <p className='text-xs text-gray-500 mt-1.5 flex items-center gap-1'>
+                                  <span>⏱️</span>
+                                  {getTimeAgo(Date.now() - notif.time)}
+                                </p>
+                              </div>
+                            </div>
+                            <button 
+                              className='absolute top-3 right-3 text-gray-600 hover:text-red-400 rounded-full w-6 h-6 flex justify-center items-center hover:bg-red-500/10 transition-all text-xs font-bold'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notif.id);
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className='p-12 text-center'>
+                          <FaBell size={56} className='mx-auto mb-4 text-gray-700'/>
+                          <p className="text-gray-400 font-medium">No new notifications</p>
+                          <p className="text-gray-600 text-sm mt-2">You're all caught up!</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    {notificationsList.length > 0 && (
+                      <div className='p-4 border-t border-slate-700/50 text-center bg-slate-800/30'>
+                        <button className='text-sm font-semibold text-cyan-400 hover:text-cyan-300 hover:underline transition-colors'>
+                          View all notifications →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
 
 
@@ -197,7 +277,9 @@ const Components = () => {
 
               
             </div>
-            <div className='flex-1 overflow-y-auto p-6'>
+
+            {/* Main Content Area */}
+            <div className='flex-1 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950'>
               <Routes>
                 <Route index element={<Index/>}/>
                 <Route path='profile' element={<Profile/>}/>
@@ -209,7 +291,6 @@ const Components = () => {
               </Routes>
             </div>
           </div>
-
 
         </div>
       </div>
