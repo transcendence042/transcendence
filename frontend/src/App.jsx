@@ -36,11 +36,11 @@ const Components = () => {
     const days = Math.floor(hours / 24);
     const weeks = Math.floor(days / 7);
 
-    if (seconds < 60) return (`${seconds} seconds ago`)
-    else if (minutes < 60) return (`${minutes} minutes ago`)
-    else if (hours < 24) return (`${hours} hours ago`)
-    else if (days < 7) return (`${days} days ago`)
-    else return (`${weeks} weeks ago`)
+    if (seconds < 60) return (`${seconds} ${language[lan].secondsAgo}`)
+    else if (minutes < 60) return (`${minutes} ${language[lan].minutesAgo}`)
+    else if (hours < 24) return (`${hours} ${language[lan].hoursAgo}`)
+    else if (days < 7) return (`${days} ${language[lan].daysAgo}`)
+    else return (`${weeks} ${language[lan].weeksAgo}`)
 
   }
 
@@ -103,9 +103,7 @@ const Components = () => {
             <button 
               className='group relative w-full h-20 flex flex-col justify-center items-center text-3xl lg:text-4xl font-black border-b border-slate-700/50 hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-cyan-500/10 transition-all duration-300 overflow-hidden' 
               onClick={() => navigate('/index')}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 group-hover:from-emerald-300 group-hover:to-cyan-300 transition-all">42</span>
+            >              <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 group-hover:from-emerald-300 group-hover:to-cyan-300 transition-all">42</span>
             </button>
 
             {/* Navigation Items */}

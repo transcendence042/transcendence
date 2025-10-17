@@ -138,7 +138,8 @@ export async function login(req, reply) {
       req.server.io.to(friend).emit("friendConnected", {username: user.username, id: user.id})
     })
   }
-
+  else
+      console.log(`CURRENTLY NO FRIENDS FOR:${user.username}`)
   reply.send({ token, user: { id: user.id, username: user.username, displayName: user.displayName } });
 }
 
@@ -314,6 +315,12 @@ export async function respondToFriendRequest(req, reply) {
     if (action === 'accept') {
       await friendship.update({ status: 'accepted' });
       reply.send({ message: 'Friend request accepted' });
+
+      const me = await User.findByPk(req.user.id, {
+        attributes: ['username', 'displayName']
+      })
+      if (me)
+        req.server.io.to(requestId).emit("acceptedFriendRequest", {friendUsername: me.username, friendDisplayName: me.displayName})
     } else {
       await friendship.destroy();
       reply.send({ message: 'Friend request rejected' });

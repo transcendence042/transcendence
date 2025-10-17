@@ -88,15 +88,15 @@ const Game = () => {
 }, [gameState, roomIamIn])
 
     const createGame = () => {
-        if (gameName === '') {alert("game Name cannot be empty");return};
+        if (gameName === '') return;
         if (!socket) return;
         const mode = oponent === 'robocot' ? 'AI' : 'Human'
-        alert(`CreateGame! Oponent: ${mode} roomName: ${gameName}`);
+        //alert(`CreateGame! Oponent: ${mode} roomName: ${gameName}`);
         //return;
 
         //Is the mode is AI setWaitingForOpponent flase so the user can start playing!!!
-        if (mode === 'AI') {alert(`In create Game setWaiting for oppoenent to false`), setWaitingForOpponent(false)}
-        else if (mode === 'Human') {alert(`In Create Game setWaiting for oppoenent to true`), setWaitingForOpponent(true)}
+        if (mode === 'AI') {/*alert(`In create Game setWaiting for oppoenent to false`), */setWaitingForOpponent(false)}
+        else if (mode === 'Human') {/*alert(`In Create Game setWaiting for oppoenent to true`), */setWaitingForOpponent(true)}
 
         socket.emit("createRoom", gameName, {mode})
         setGameName('');
@@ -176,10 +176,10 @@ const Game = () => {
 
         if (room) {
             if ((room.players.length > 1 || room.aiEnabled)) {
-                alert(`Setting waitForOpponent to false in room: ${roomId}`)
+                //alert(`Setting waitForOpponent to false in room: ${roomId}`)
                 setWaitingForOpponent(false);
             } else {
-                alert(`Setting waitForOpponent to true in room: ${roomId}`)
+                //alert(`Setting waitForOpponent to true in room: ${roomId}`)
                 setWaitingForOpponent(true);
             }
         }
@@ -225,7 +225,7 @@ const Game = () => {
                             <button 
                                 key={index} 
                                 onClick={() => joinRoom(rooms, rooms.roomId)}
-                                className="group relative w-64 h-28 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 hover:from-slate-600 hover:via-slate-700 hover:to-slate-800 border border-emerald-500/30 hover:border-emerald-400/50 text-white rounded-lg shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 overflow-hidden"
+                                className={`group relative w-64 h-28 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 hover:from-slate-600 hover:via-slate-700 hover:to-slate-800 border border-emerald-500/30 hover:border-emerald-400/50 text-white rounded-lg shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 overflow-hidden ${roomIamIn === rooms.roomId && 'border-4 border-green-700'}`}
                             >
                                 {/* Subtle accent line */}
                                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent"></div>

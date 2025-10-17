@@ -12,7 +12,7 @@ export function ComponentContextProvider({children}) {
     const [isAiEnabled, setIsAiEnabled] = useState(false);
     const [waitingForOpponent, setWaitingForOpponent] = useState(true);
     
-    const {token, user} = useContext(AuthContext)
+    const {token, user, language, lan} = useContext(AuthContext)
     const socketRef = useRef(null);
 
     // Socket connection management
@@ -49,18 +49,6 @@ export function ComponentContextProvider({children}) {
                 console.error('Socket error:', error);
             });
 
-            socketRef.current.on("sendFriendRequest", (data) => {
-                setNotifications(notifications => notifications + 1)
-                setNotificationsList(prevList => [...prevList, {
-                    id: Date.now(),
-                    user: data.from, 
-                    msg: "has send you a friend request", 
-                    time: Date.now(), 
-                    type: 'friendRequest', 
-                    status: true
-                }])
-            })
-
             socketRef.current.on("lobbyUpdate", (roomsRunningLobby) => {
                 setRoomsRunning(roomsRunningLobby);
             })
@@ -77,6 +65,40 @@ export function ComponentContextProvider({children}) {
     }, [user, token]);
 
     // Separate useEffect for gameEnded listener with roomIamIn dependency
+
+    useEffect(() => {
+
+        const handleSendFriedRequest = (data) => {
+            setNotifications(notifications => notifications + 1)
+            setNotificationsList(prevList => [...prevList, {
+                id: Date.now(),
+                user: data.from, 
+                msg: `${language[lan].NotyHasSendYouAFriendRequest}`, 
+                time: Date.now(), 
+                type: 'friendRequest', 
+                status: true
+            }])
+        }
+
+        socketRef.current.on("sendFriendRequest", handleSendFriedRequest)
+
+        return () => {
+            if (socketRef.current)
+                socketRef.current.off("sendFriendRequest", handleSendFriedRequest)
+        }
+    }, [token, user, lan])
+
+    useEffect(() => {
+        setNotificationsList(notificationsList.map(notify => {
+                if (notify.type === 'friendRequest')
+                    return {...notify, msg: `${language[lan].NotyHasSendYouAFriendRequest}`}
+                else
+                    return notify;
+            }
+        ))
+    }, [lan])
+
+
     useEffect(() => {
         if (!socketRef.current || !roomIamIn) return;
 

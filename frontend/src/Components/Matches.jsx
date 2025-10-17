@@ -11,7 +11,7 @@ const Matches = () => {
 
     const joinRoom = (room, roomId) => {
         //check if player is already in this room
-        alert(`joining room from matches the room.length is: ${room.players.length} aiEnabled: ${room.aiEnabled}`)
+        //alert(`joining room from matches the room.length is: ${room.players.length} aiEnabled: ${room.aiEnabled}`)
         if (room.players.length > 1 || room.aiEnabled) {
             setWaitingForOpponent(false)
         }

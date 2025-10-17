@@ -175,7 +175,7 @@ setInterval(async () => {
             {
                 //console.log("Game updatinnnnngngnngng!!!")
                 isPlayerInRoom.forEach(p => {
-                    io.to(p.userId).emit('gameUpdate', {...room.gameState, players: room.players}, roomId);
+                    io.to(p.userId).emit('gameUpdate', {...room.gameState, players: room.players, aiDifficulty: room.aiDifficulty}, roomId);
                 })
             }
         }
@@ -298,10 +298,16 @@ io.on("connection", (socket) => {
 
     socket.on("createRoom", (roomNameId, {mode}) => {
 
-        const roomTemp = gameRooms[roomNameId]
-        const aiEnabled = mode === 'AI'
-        if (roomTemp) {
-            roomNameId = roomNameId + '$$$';
+        const aiEnabled = mode === 'AI';
+        
+        // If room already exists, append $ until we find unique name
+        while (gameRooms[roomNameId]) {
+            roomNameId = roomNameId + '$';
+        }
+
+        // If roomNameId is a number, add a () to not delete the sockets of the users!
+        if (/^\d+$/.test(roomNameId)) {
+            roomNameId = `(${roomNameId})`;
         }
     
         console.log(`🎮 Creating room '${roomNameId}' with AI=${aiEnabled}, mode='${mode}'`);

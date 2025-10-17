@@ -169,20 +169,26 @@ const Profile = () => {
         if (!socket) return;
 
         const checkFriendLogOut = (data) => {
-            console.log(`friend -> ${data.username} with ID: ${data.id} just left!`)
+            //alert(`friend -> ${data.username} with ID: ${data.id} just left!`)
             loadFriends();
         }
         const checkFriendLogin = (data) => {
-            console.log(`Friend (${data.username}) with ID: ${data.id} has connected!`)
+            //alert(`Friend (${data.username}) with ID: ${data.id} has connected!`)
+            loadFriends();
+        }
+
+        const handleAcceptedFriendRequest = (data) => {
             loadFriends();
         }
 
         socket.on("friendLogout", checkFriendLogOut)
         socket.on("friendConnected", checkFriendLogin)
+        socket.on("acceptedFriendRequest", handleAcceptedFriendRequest)
 
         return () => {
             socket.off("friendLogout", checkFriendLogOut)
             socket.off("friendConnected", checkFriendLogin)
+            socket.off("acceptedFriendRequest", handleAcceptedFriendRequest);
         }
 
     }, [socket])
@@ -372,7 +378,7 @@ const Profile = () => {
                                                             {match.Player1.username} <span className="text-emerald-400 font-black">{match.player1Score}</span> : <span className="text-red-400 font-black">{match.player2Score}</span> {match.Player2.username}
                                                         </span>
                                                         <span className="text-xs text-gray-400 mt-1">
-                                                            ⏱️ {match.duration}s • {new Date(match.startGameTime).toLocaleString()}
+                                                            ⏱️ {match.duration}s{"\u00A0\u00A0\u00A0\u00A0\u00A0"} {new Date(match.startGameTime).toLocaleString()}
                                                         </span>
                                                     </div>
                                                 </div>

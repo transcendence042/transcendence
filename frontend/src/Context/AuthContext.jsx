@@ -18,12 +18,23 @@ export function AuthContextProvider({children}) {
         Settings: 'settings',
         Logout: 'logout',
         Searcher: 'Search players, matches...',
+
+        // Notifications
         Notifications: 'Notifications',
         NotyClearAll: 'Clear all',
         NotyNoNewNotications: 'No new notifications',
-        NotyYoureCaughtUp: "You're all caught up!",
+        NotyYoureCaughtUp: 'You’re all caught up!',
         NotyViewAllNotications: 'View all notifications →',
-        
+        NotyHasSendYouAFriendRequest: 'has sent you a friend request',
+        secondsAgo: 'seconds ago',
+        minutesAgo: 'minutes ago',
+        hoursAgo: 'hours ago',
+        daysAgo: 'days ago',
+        weeksAgo: 'weeks ago',
+
+        grettings: `Hi there ${user?.username || 'user1'}`,
+        welcome: `Welcome to the time of your life!`,
+
         // Profile Section
         profileWelcome: 'My Profile',
         changeAvatar: 'Change Avatar',
@@ -71,7 +82,8 @@ export function AuthContextProvider({children}) {
 
         // Game
         gamePongGame: 'Pong Game',
-        gameOponent: 'Oponent',
+        gameOponent: 'Oponent', // Added as requested
+        gameOpponent: 'Opponent',
         gameStartGame: 'Start Game',
         gameRoomName: 'Room Name',
         gameEnterRoomName: 'Enter room name...',
@@ -102,7 +114,16 @@ export function AuthContextProvider({children}) {
         NotyNoNewNotications: 'Nenhuma notificação nova',
         NotyYoureCaughtUp: 'Você está atualizado!',
         NotyViewAllNotications: 'Ver todas as notificações →',
-        
+        NotyHasSendYouAFriendRequest: 'enviou uma solicitação de amizade',
+        secondsAgo: 'segundos atrás',
+        minutesAgo: 'minutos atrás',
+        hoursAgo: 'horas atrás',
+        daysAgo: 'dias atrás',
+        weeksAgo: 'semanas atrás',
+
+        grettings: `Olá ${user?.username || 'user1'}`,
+        welcome: `Bem-vindo ao momento da sua vida!`,
+
         // Profile Section
         profileWelcome: 'Meu Perfil',
         changeAvatar: 'Alterar Avatar',
@@ -150,7 +171,8 @@ export function AuthContextProvider({children}) {
 
         // Game
         gamePongGame: 'Jogo Pong',
-        gameOponent: 'Oponente',
+        gameOponent: 'Oponente', // Added (using correct Portuguese term, as "Oponent" is not a word)
+        gameOpponent: 'Oponente',
         gameStartGame: 'Iniciar Jogo',
         gameRoomName: 'Nome da Sala',
         gameEnterRoomName: 'Digite o nome da sala...',
@@ -181,7 +203,16 @@ export function AuthContextProvider({children}) {
         NotyNoNewNotications: 'Aucune nouvelle notification',
         NotyYoureCaughtUp: 'Vous êtes à jour !',
         NotyViewAllNotications: 'Voir toutes les notifications →',
-        
+        NotyHasSendYouAFriendRequest: 'vous a envoyé une demande d\'ami',
+        secondsAgo: 'secondes auparavant',
+        minutesAgo: 'minutes auparavant',
+        hoursAgo: 'heures auparavant',
+        daysAgo: 'jours auparavant',
+        weeksAgo: 'semaines auparavant',
+
+        grettings: `Bonjour ${user?.username || 'user1'}`,
+        welcome: `Bienvenue au moment de votre vie !`,
+
         // Profile Section
         profileWelcome: 'Mon Profil',
         changeAvatar: 'Changer d\'avatar',
@@ -229,7 +260,8 @@ export function AuthContextProvider({children}) {
 
         // Game
         gamePongGame: 'Jeu de Pong',
-        gameOponent: 'Adversaire',
+        gameOponent: 'Oposant', // Added (using French equivalent, acknowledging English misspelling)
+        gameOpponent: 'Adversaire',
         gameStartGame: 'Démarrer le jeu',
         gameRoomName: 'Nom de la salle',
         gameEnterRoomName: 'Entrez le nom de la salle...',
@@ -247,85 +279,6 @@ export function AuthContextProvider({children}) {
         setCurrentLanguage: 'Langue actuelle :'
     },
 
-    // German
-    de: {
-        Game: 'Spiel',
-        Profile: 'Profil',
-        FriendRequest: 'Freundschaftsanfrage',
-        Settings: 'Einstellungen',
-        Logout: 'Abmelden',
-        Searcher: 'Spieler, Spiele suchen...',
-        Notifications: 'Benachrichtigungen',
-        NotyClearAll: 'Alle löschen',
-        NotyNoNewNotications: 'Keine neuen Benachrichtigungen',
-        NotyYoureCaughtUp: 'Sie sind auf dem neuesten Stand!',
-        NotyViewAllNotications: 'Alle Benachrichtigungen anzeigen →',
-        
-        // Profile Section
-        profileWelcome: 'Mein Profil',
-        changeAvatar: 'Avatar ändern',
-        changePassword: 'Passwort ändern',
-        profileUsername: 'Benutzername:',
-        profileDisplayName: 'Anzeigename',
-        profilePHDisplayName: 'Anzeigenamen eingeben',
-        profileEmail: 'E-Mail:',
-        profilePHEmail: 'E-Mail eingeben',
-        updateProfile: 'Profil aktualisieren',
-        profileGameStatistics: 'Spielstatistiken',
-        profileWins: 'Siege',
-        profileLosses: 'Niederlagen',
-        profileWinRate: 'Siegesquote',
-        profileFriends: 'Freunde',
-        profilePHenterUsername: 'Benutzernamen eingeben',
-        profileAddFriend: 'Freund hinzufügen',
-        profileNoFriendsYet: 'Noch keine Freunde',
-        profileIsOnline: 'Online',
-        profileIsOffline: 'Offline',
-        profileMatchHistory: 'Spielverlauf',
-        profileNoMatchesYet: 'Noch keine Spiele',
-        profileWinMatch: 'SIEG',
-        profileLossMatch: 'NIEDERLAGE',
-        profileScore: 'Punktzahl',
-
-        // FriendRequest Section
-        frAcceptFriend: 'Akzeptieren',
-        frDeclineFriend: 'Ablehnen',
-        frNoFriendRequest: 'Keine Freundschaftsanfragen',
-        frNoFriendRequestMsg: 'Sie haben im Moment keine Freundschaftsanfragen.',
-        frWantsToBeYourFriend: 'Möchte Ihr Freund sein',
-
-        // Matches
-        matchesROOMSRUNNING: 'LAUFENDE RÄUME',
-        matchesNoActiveRooms: 'Keine aktiven Räume',
-        matchesNoActiveRoomsMsg: 'Es gibt derzeit keine laufenden Spielräume. Seien Sie der Erste, der einen erstellt!',
-        matchesNoActiveRoomsAdvice: 'Starten Sie ein neues Spiel, um es hier angezeigt zu sehen',
-        matchesAVAILABLE: 'VERFÜGBAR',
-        matchesROOMFULL: 'RAUM VOLL',
-        matchesCannotJoin: 'Kann nicht beitreten',
-        matchesWaiting: 'Warten...',
-        matchesPlayer1: 'Spieler 1',
-        matchesClickToJoin: 'Klicken zum Beitreten',
-
-        // Game
-        gamePongGame: 'Pong-Spiel',
-        gameOponent: 'Gegner',
-        gameStartGame: 'Spiel starten',
-        gameRoomName: 'Raumname',
-        gameEnterRoomName: 'Raumnamen eingeben...',
-        gameSelectDifficulty: 'Schwierigkeitsgrad auswählen',
-        gameEasy: 'Leicht',
-        gameMedium: 'Mittel',
-        gameHard: 'Schwer',
-        gameWaitingForOpponent: 'Warten auf Gegner...',
-        gameGetReadyToPlay: '🎮 Bereit zum Spielen!',
-        gameCreateNewRoom: 'Neuen Raum erstellen',
-        gameWaiting: 'warten...',
-
-        // Settings
-        setSelectLanguage: 'Sprache auswählen',
-        setCurrentLanguage: 'Aktuelle Sprache:'
-    },
-
     // Japanese
     ja: {
         Game: 'ゲーム',
@@ -339,7 +292,16 @@ export function AuthContextProvider({children}) {
         NotyNoNewNotications: '新しい通知はありません',
         NotyYoureCaughtUp: 'すべて確認済みです！',
         NotyViewAllNotications: 'すべての通知を見る →',
-        
+        NotyHasSendYouAFriendRequest: 'が友達リクエストを送信しました',
+        secondsAgo: '秒前',
+        minutesAgo: '分前',
+        hoursAgo: '時間前',
+        daysAgo: '日前',
+        weeksAgo: '週間前',
+
+        grettings: `こんにちは ${user?.username || 'user1'}`,
+        welcome: `人生最高の時間へようこそ！`,
+
         // Profile Section
         profileWelcome: 'マイプロフィール',
         changeAvatar: 'アバターを変更',
@@ -387,7 +349,8 @@ export function AuthContextProvider({children}) {
 
         // Game
         gamePongGame: 'ポンゲーム',
-        gameOponent: '対戦相手',
+        gameOponent: 'オポネント', // Added (using katakana for "Oponent" to reflect English misspelling)
+        gameOpponent: '対戦相手',
         gameStartGame: 'ゲーム開始',
         gameRoomName: 'ルーム名',
         gameEnterRoomName: 'ルーム名を入力...',
@@ -418,7 +381,16 @@ export function AuthContextProvider({children}) {
         NotyNoNewNotications: '没有新通知',
         NotyYoureCaughtUp: '您已全部查看！',
         NotyViewAllNotications: '查看所有通知 →',
-        
+        NotyHasSendYouAFriendRequest: '发送了好友请求',
+        secondsAgo: '秒前',
+        minutesAgo: '分钟前',
+        hoursAgo: '小时前',
+        daysAgo: '天前',
+        weeksAgo: '周前',
+
+        grettings: `你好 ${user?.username || 'user1'}`,
+        welcome: `欢迎来到你生命中最美好的时光！`,
+
         // Profile Section
         profileWelcome: '我的个人资料',
         changeAvatar: '更改头像',
@@ -466,7 +438,8 @@ export function AuthContextProvider({children}) {
 
         // Game
         gamePongGame: '乒乓游戏',
-        gameOponent: '对手',
+        gameOponent: '对手', // Added (using standard term, as "Oponent" is not transliterated)
+        gameOpponent: '对手',
         gameStartGame: '开始游戏',
         gameRoomName: '房间名称',
         gameEnterRoomName: '输入房间名称...',
@@ -497,7 +470,16 @@ export function AuthContextProvider({children}) {
         NotyNoNewNotications: 'No hay notificaciones nuevas',
         NotyYoureCaughtUp: '¡Estás al día!',
         NotyViewAllNotications: 'Ver todas las notificaciones →',
-        
+        NotyHasSendYouAFriendRequest: 'te ha enviado una solicitud de amistad',
+        secondsAgo: 'segundos atrás',
+        minutesAgo: 'minutos atrás',
+        hoursAgo: 'horas atrás',
+        daysAgo: 'días atrás',
+        weeksAgo: 'semanas atrás',
+
+        grettings: `Hola ${user?.username || 'user1'}`,
+        welcome: `¡Bienvenido al momento de tu vida!`,
+
         // Profile Section
         profileWelcome: 'Mi Perfil',
         changeAvatar: 'Cambiar Avatar',
@@ -545,7 +527,8 @@ export function AuthContextProvider({children}) {
 
         // Game
         gamePongGame: 'Juego de Pong',
-        gameOponent: 'Oponente',
+        gameOponent: 'Oponente', // Added (using correct Spanish term, as "Oponent" is not a word)
+        gameOpponent: 'Oponente',
         gameStartGame: 'Iniciar Juego',
         gameRoomName: 'Nombre de la Sala',
         gameEnterRoomName: 'Ingresa el nombre de la sala...',
@@ -571,12 +554,23 @@ export function AuthContextProvider({children}) {
         Settings: 'настройки',
         Logout: 'выйти',
         Searcher: 'Поиск игроков, матчей...',
+
+        // Notifications
         Notifications: 'Уведомления',
         NotyClearAll: 'Очистить все',
         NotyNoNewNotications: 'Нет новых уведомлений',
         NotyYoureCaughtUp: 'Вы в курсе всех событий!',
         NotyViewAllNotications: 'Посмотреть все уведомления →',
-        
+        NotyHasSendYouAFriendRequest: 'отправил вам запрос на дружбу',
+        secondsAgo: 'секунд назад',
+        minutesAgo: 'минут назад',
+        hoursAgo: 'часов назад',
+        daysAgo: 'дней назад',
+        weeksAgo: 'недель назад',
+
+        grettings: `Привет ${user?.username || 'user1'}`,
+        welcome: `Добро пожаловать в лучшее время вашей жизни!`,
+
         // Profile Section
         profileWelcome: 'Мой профиль',
         changeAvatar: 'Сменить аватар',
@@ -624,7 +618,8 @@ export function AuthContextProvider({children}) {
 
         // Game
         gamePongGame: 'Игра в пинг-понг',
-        gameOponent: 'Противник',
+        gameOponent: 'Оппонент', // Added (using Russian transliteration for "Oponent")
+        gameOpponent: 'Противник',
         gameStartGame: 'Начать игру',
         gameRoomName: 'Название комнаты',
         gameEnterRoomName: 'Введите название комнаты...',
@@ -640,9 +635,97 @@ export function AuthContextProvider({children}) {
         // Settings
         setSelectLanguage: 'Выбрать язык',
         setCurrentLanguage: 'Текущий язык:'
+    },
+
+    // Arabic
+    ar: {
+        Game: 'لعبة',
+        Profile: 'الملف الشخصي',
+        FriendRequest: 'طلب صداقة',
+        Settings: 'الإعدادات',
+        Logout: 'تسجيل الخروج',
+        Searcher: 'البحث عن لاعبين، مباريات...',
+        Notifications: 'الإشعارات',
+        NotyClearAll: 'مسح الكل',
+        NotyNoNewNotications: 'لا توجد إشعارات جديدة',
+        NotyYoureCaughtUp: 'أنت محدث بالكامل!',
+        NotyViewAllNotications: 'عرض كل الإشعارات →',
+        NotyHasSendYouAFriendRequest: 'أرسل لك طلب صداقة',
+        secondsAgo: 'ثوانٍ مضت',
+        minutesAgo: 'دقائق مضت',
+        hoursAgo: 'ساعات مضت',
+        daysAgo: 'أيام مضت',
+        weeksAgo: 'أسابيع مضت',
+
+        grettings: `مرحبًا ${user?.username || 'user1'}`,
+        welcome: `مرحبًا بك في أفضل لحظات حياتك!`,
+
+        // Profile Section
+        profileWelcome: 'ملفي الشخصي',
+        changeAvatar: 'تغيير الصورة الرمزية',
+        changePassword: 'تغيير كلمة المرور',
+        profileUsername: 'اسم المستخدم:',
+        profileDisplayName: 'اسم العرض',
+        profilePHDisplayName: 'أدخل اسم العرض',
+        profileEmail: 'البريد الإلكتروني:',
+        profilePHEmail: 'أدخل البريد الإلكتروني',
+        updateProfile: 'تحديث الملف الشخصي',
+        profileGameStatistics: 'إحصائيات اللعبة',
+        profileWins: 'الانتصارات',
+        profileLosses: 'الهزائم',
+        profileWinRate: 'نسبة الفوز',
+        profileFriends: 'الأصدقاء',
+        profilePHenterUsername: 'أدخل اسم المستخدم',
+        profileAddFriend: 'إضافة صديق',
+        profileNoFriendsYet: 'لا توجد طلبات صداقة بعد',
+        profileIsOnline: 'متصل',
+        profileIsOffline: 'غير متصل',
+        profileMatchHistory: 'تاريخ المباريات',
+        profileNoMatchesYet: 'لا توجد مباريات بعد',
+        profileWinMatch: 'فوز',
+        profileLossMatch: 'خسارة',
+        profileScore: 'النتيجة',
+
+        // FriendRequest Section
+        frAcceptFriend: 'قبول',
+        frDeclineFriend: 'رفض',
+        frNoFriendRequest: 'لا توجد طلبات صداقة',
+        frNoFriendRequestMsg: 'ليس لديك أي طلبات صداقة في الوقت الحالي.',
+        frWantsToBeYourFriend: 'يريد أن يكون صديقك',
+
+        // Matches
+        matchesROOMSRUNNING: 'الغرف الجارية',
+        matchesNoActiveRooms: 'لا توجد غرف نشطة',
+        matchesNoActiveRoomsMsg: 'لا توجد غرف ألعاب جارية حاليًا. كن أول من ينشئ واحدة!',
+        matchesNoActiveRoomsAdvice: 'ابدأ لعبة جديدة لتظهر هنا',
+        matchesAVAILABLE: 'متاح',
+        matchesROOMFULL: 'الغرفة ممتلئة',
+        matchesCannotJoin: 'لا يمكن الانضمام',
+        matchesWaiting: 'في الانتظار...',
+        matchesPlayer1: 'اللاعب 1',
+        matchesClickToJoin: 'انقر للانضمام',
+
+        // Game
+        gamePongGame: 'لعبة بونغ',
+        gameOponent: 'خصم', // Added (using standard Arabic term, as "Oponent" is not transliterated)
+        gameOpponent: 'الخصم',
+        gameStartGame: 'بدء اللعبة',
+        gameRoomName: 'اسم الغرفة',
+        gameEnterRoomName: 'أدخل اسم الغرفة...',
+        gameSelectDifficulty: 'اختر مستوى الصعوبة',
+        gameEasy: 'سهل',
+        gameMedium: 'متوسط',
+        gameHard: 'صعب',
+        gameWaitingForOpponent: 'في انتظار الخصم...',
+        gameGetReadyToPlay: '🎮 استعد للعب!',
+        gameCreateNewRoom: 'إنشاء غرفة جديدة',
+        gameWaiting: 'في الانتظار...',
+
+        // Settings
+        setSelectLanguage: 'اختر اللغة',
+        setCurrentLanguage: 'اللغة الحالية:'
     }
 }
-      
 
     const socketRef = useRef(null);
 
