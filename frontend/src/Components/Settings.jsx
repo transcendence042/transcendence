@@ -13,6 +13,7 @@ const Settings = () => {
         { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
         { code: 'zh', label: '中文', flag: '🇨🇳' },
         { code: 'es', label: 'Español', flag: '🇪🇸' },
+        { code: 'ru', label: 'Русский', flag: '🇷🇺' }
     ];
 
     return (
@@ -23,13 +24,13 @@ const Settings = () => {
 
                 {/* Language Selection Section */}
                 <section className='bg-gray-800 border border-gray-700 rounded-lg p-6'>
-                    <h3 className='text-xl font-semibold text-white mb-4'>Select Language</h3>
+                    <h3 className='text-xl font-semibold text-white mb-4'>{language[lan].setSelectLanguage}</h3>
                     
                     <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
                         {languages.map((lang) => (
                             <button
                                 key={lang.code}
-                                onClick={() => setLan(lang.code)}
+                                onClick={() => {setLan(lang.code), localStorage.setItem('language', lang.code)}}
                                 className={`
                                     flex flex-col items-center justify-center gap-2 p-4 rounded-lg 
                                     border-2 transition-all duration-300
@@ -49,7 +50,7 @@ const Settings = () => {
                     {/* Current Selection Display */}
                     <div className='mt-6 p-4 bg-gray-900 rounded-lg border border-gray-700'>
                         <p className='text-sm text-gray-400'>
-                            Current Language: <span className='text-white font-semibold'>
+                            {language[lan].setCurrentLanguage}: <span className='text-white font-semibold'>
                                 {languages.find(l => l.code === lan)?.label || 'English'}
                             </span>
                         </p>

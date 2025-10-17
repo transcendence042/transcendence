@@ -63,7 +63,7 @@ const Matches = () => {
                                     {/* Available Status Banner */}
                                     <div className="absolute top-0 left-0 right-0 bg-green-500 text-white text-xs font-bold py-2 px-3 flex items-center justify-center gap-2">
                                         <FaUnlock className="w-3 h-3" />
-                                        <span>AVAILABLE</span>
+                                        <span>{language[lan].matchesAVAILABLE}</span>
                                     </div>
                                     
                                     {/* Main Content */}
@@ -77,13 +77,13 @@ const Matches = () => {
                                                 </div>
                                                 <div className="text-white/80 font-bold text-xs">VS</div>
                                                 <div className="text-sm font-medium truncate max-w-20">
-                                                    {rooms.aiEnabled ? '🤖 AI' : (rooms.players.find(p => !p.isPlayer1)?.username || 'Waiting...')}
+                                                    {rooms.aiEnabled ? '🤖 AI' : (rooms.players.find(p => !p.isPlayer1)?.username || `${language[lan].matchesWaiting}`)}
                                                 </div>
                                             </div>
                                         </div>
                                         
                                         <div className="text-xs text-green-200 opacity-80 group-hover:opacity-100 transition-opacity">
-                                            Click to join
+                                            {language[lan].matchesClickToJoin}
                                         </div>
                                     </div>
                                 </button>
@@ -97,7 +97,7 @@ const Matches = () => {
                                         {/* Lock Status Banner */}
                                         <div className="absolute top-0 left-0 right-0 bg-red-500 text-white text-xs font-bold py-2 px-3 flex items-center justify-center gap-2">
                                             <FaLock className="w-3 h-3" />
-                                            <span>ROOM FULL</span>
+                                            <span>{language[lan].matchesROOMFULL}</span>
                                         </div>
                                         {/* Main Content */}
                                         <div className="pt-10 px-6 pb-6 h-full flex flex-col justify-center items-center text-center">
@@ -105,16 +105,16 @@ const Matches = () => {
                                             <div className="bg-white/10 rounded-lg p-4 mb-6 w-full backdrop-blur-sm">
                                                 <div className="flex items-center justify-center gap-3">
                                                     <div className="text-sm font-medium truncate max-w-20">
-                                                        {rooms.players.find(p => p.isPlayer1)?.username || 'Player 1'}
+                                                        {rooms.players.find(p => p.isPlayer1)?.username || `${language[lan].matchesPlayer1}`}
                                                     </div>
                                                     <div className="text-white/80 font-bold text-xs">VS</div>
                                                     <div className="text-sm font-medium truncate max-w-20">
-                                                        {rooms.aiEnabled ? '🤖 AI' : (rooms.players.find(p => !p.isPlayer1)?.username || 'Waiting...')}
+                                                        {rooms.aiEnabled ? '🤖 AI' : (rooms.players.find(p => !p.isPlayer1)?.username || `${language[lan].matchesWaiting}`)}
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="text-xs text-gray-400 opacity-80">
-                                                Cannot join
+                                                {language[lan].CannotJoin}
                                             </div>
                                         </div>
                                         {/* Overlay for disabled state */}

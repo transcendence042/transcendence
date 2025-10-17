@@ -79,7 +79,7 @@ const FriendRequest = () => {
                                 <h2 className='text-2xl font-bold text-white group-hover:text-amber-400 transition-colors duration-200'>
                                     {friend.User.username}
                                 </h2>
-                                <p className="text-sm text-gray-400 mt-1">Wants to be your friend</p>
+                                <p className="text-sm text-gray-400 mt-1">{language[lan].frWantsToBeYourFriend}</p>
                             </div>
                             
                             {/* Action buttons */}

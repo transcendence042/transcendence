@@ -4,7 +4,7 @@ import { AuthContext } from "../Context/AuthContext"
 
 const Game = () => {
 
-    const {user} = useContext(AuthContext)
+    const {user, language, lan} = useContext(AuthContext)
     const [gameName, setGameName] = useState(user.username);
     const {socket, roomsRunning, roomIamIn, setRoomIamIn, isAiEnabled, setIsAiEnabled, waitingForOpponent, setWaitingForOpponent} = useContext(ComponentContext);
     const [roomsPlayerIsIn, setRoomPlayerIsIn] = useState([]);
@@ -188,14 +188,14 @@ const Game = () => {
 
     return (
         <div>
-            <h1 className="text-4xl font-bold text-white mb-8 text-center">Pong Game</h1>
+            <h1 className="text-4xl font-bold text-white mb-8 text-center">{language[lan].gamePongGame}</h1>
             
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-center">
                 
                 {roomsPlayerIsIn.length === 0 ? (
                     <div className="flex flex-col gap-6">
                         <div className="relative mt-14 px-8 py-4 bg-gray-700 hover:bg-gray-600 text-white text-2xl font-semibold rounded-lg shadow-lg flex justify-center">
-                            <button onClick={() => setChooseOponent(!chooseOponent)} className="w-full">Oponent { oponent === 'robocot' ? '🤖' : '👤'}</button>
+                            <button onClick={() => setChooseOponent(!chooseOponent)} className="w-full">{language[lan].gameOponent} { oponent === 'robocot' ? '🤖' : '👤'}</button>
                             {chooseOponent &&
                             <div className="absolute w-full flex flex-col -bottom-36 bg-gray-800 rounded-lg gap-1 z-50">
                                 <button onClick={() => {setChooseOponent(false); setOponent('robocot')}} className={`bg-gray-700 py-3 rounded-lg hover:bg-gray-600 border-4 ${oponent === 'robocot' ? 'border-pong-green/80' : 'border-gray-600'}`}>🤖</button>
@@ -207,15 +207,15 @@ const Game = () => {
                             onClick={() => createGame()}
                             className="mt-2 px-8 py-4 bg-pong-green/70 hover:bg-pong-green/90 text-white text-2xl font-semibold rounded-lg shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
                         >
-                            Start Game
+                            {language[lan].gameStartGame}
                         </button>
                         <div className="flex bg-gray-800 justify-center items-center rounded-md p-2">
-                            <span className="text-white/80 px-4">Room Name </span>
+                            <span className="text-white/80 px-4">{language[lan].gameRoomName} </span>
                             <input 
                                 className="px-4 py-2 rounded-lg border-2 border-gray-600 bg-white/70 text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
                                 value={gameName} 
                                 onChange={(e) => setGameName(e.target.value)}
-                                placeholder="Enter room name..."
+                                placeholder={`${language[lan].gameEnterRoomName}`}
                             />
                         </div>
                     </div>
@@ -242,7 +242,7 @@ const Game = () => {
                                 <div className="relative h-full flex flex-col justify-center items-start px-4 pt-2">
                                     <h1 className="text-xl font-bold mb-1 truncate w-full text-white">{rooms.roomId}</h1>
                                     <div className="text-sm text-gray-300 truncate w-full">
-                                        {rooms.players.find(p => p.isPlayer1)?.username} <span className="text-emerald-400">vs</span> {rooms.aiEnabled ? '🤖' : rooms.players.find(p => !p.isPlayer1)?.username ? rooms.players.find(p => !p.isPlayer1)?.username : 'waiting...'}
+                                        {rooms.players.find(p => p.isPlayer1)?.username} <span className="text-emerald-400">vs</span> {rooms.aiEnabled ? '🤖' : rooms.players.find(p => !p.isPlayer1)?.username ? rooms.players.find(p => !p.isPlayer1)?.username : <span className="animate-pulse">{language[lan].gameWaiting}</span>}
                                     </div>
                                 </div>
                             </button>
@@ -259,7 +259,7 @@ const Game = () => {
                             {/* Content */}
                             <div className="relative h-full flex flex-col justify-center items-center px-4 pt-2">
                                 <div className="text-3xl mb-2 opacity-70 group-hover:opacity-90 transition-opacity">🎮</div>
-                                <h1 className="text-lg font-semibold text-center text-gray-300 group-hover:text-white transition-colors">Create New Room</h1>
+                                <h1 className="text-lg font-semibold text-center text-gray-300 group-hover:text-white transition-colors">{language[lan].gameCreateNewRoom}</h1>
                             </div>
                         </button>
                     </div>
@@ -271,7 +271,7 @@ const Game = () => {
                     <div className="mb-6 flex flex-col items-center justify-center">
                         <div className="flex flex-col gap-6">
                             <div className="relative mt-14 px-8 py-4 bg-gray-700 hover:bg-gray-600 text-white text-2xl font-semibold rounded-lg shadow-lg flex justify-center">
-                                <button onClick={() => setChooseOponent(!chooseOponent)} className="w-full">Opponent { oponent === 'robocot' ? '🤖' : '👤'}</button>
+                                <button onClick={() => setChooseOponent(!chooseOponent)} className="w-full">{language[lan].gameOponent} { oponent === 'robocot' ? '🤖' : '👤'}</button>
                                 {chooseOponent &&
                                 <div className="absolute w-full flex flex-col -bottom-36 bg-gray-800 rounded-lg gap-1 z-50">
                                     <button onClick={() => {setChooseOponent(false); setOponent('robocot')}} className={`bg-gray-700 py-3 rounded-lg hover:bg-gray-600 border-4 ${oponent === 'robocot' ? 'border-pong-green/80' : 'border-gray-600'}`}>🤖</button>
@@ -283,15 +283,15 @@ const Game = () => {
                                 onClick={() => createGame()}
                                 className="mt-2 px-8 py-4 bg-pong-green/70 hover:bg-pong-green/90 text-white text-2xl font-semibold rounded-lg shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
                             >
-                                Start Game
+                                {language[lan].gameStartGame}
                             </button>
                             <div className="flex bg-gray-800 justify-center items-center rounded-md p-2">
-                                <span className="text-white/80 px-4">Room Name </span>
+                                <span className="text-white/80 px-4">{language[lan].gameRoomName} </span>
                                 <input 
                                     className="px-4 py-2 rounded-lg border-2 border-gray-600 bg-white/70 text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" 
                                     value={gameName} 
                                     onChange={(e) => setGameName(e.target.value)}
-                                    placeholder="Enter room name..."
+                                    placeholder={`${language[lan].gameEnterRoomName}`}
                                 />
                             </div>
                         </div>
@@ -302,13 +302,13 @@ const Game = () => {
                 <div className="mb-6">
                     { isAiEnabled &&
                     <div className="flex flex-col items-center gap-4 mb-6">
-                        <h2 className="text-white text-2xl font-bold tracking-wide">Select Difficulty</h2>
+                        <h2 className="text-white text-2xl font-bold tracking-wide">{language[lan].gameSelectDifficulty}</h2>
                         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                             <button 
                                 onClick={() => setDifficulty('easy')} 
                                 className={`group relative px-8 sm:px-12 py-3 bg-gradient-to-br from-green-400 to-green-600 text-white text-lg sm:text-xl font-bold rounded-lg shadow-lg hover:shadow-green-500/50 active:scale-95 transition-all duration-200 ${difficultyLevel === 'easy' ? 'border-4 border-green-500': 'border-2 border-green-300/50 hover:border-green-300'}`}
                             >
-                                <span className="relative z-10 px-1">🌱 Easy</span>
+                                <span className="relative z-10 px-1">🌱 {language[lan].gameEasy}</span>
                                 <div className="absolute inset-0 bg-gradient-to-br from-green-300 to-green-500 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
                             </button>
                             
@@ -316,7 +316,7 @@ const Game = () => {
                                 onClick={() => setDifficulty('medium')} 
                                 className={`group relative px-8 sm:px-12 py-3 bg-gradient-to-br from-orange-400 to-orange-600 text-white text-lg sm:text-xl font-bold rounded-lg shadow-lg hover:shadow-orange-500/50 active:scale-95 transition-all duration-200 ${difficultyLevel === 'medium' ? 'border-4 border-green-500' : 'border-2 border-orange-300/50 hover:border-orange-300'}`}
                             >
-                                <span className="relative z-10">⚡ Medium</span>
+                                <span className="relative z-10">⚡ {language[lan].gameMedium}</span>
                                 <div className="absolute inset-0 bg-gradient-to-br from-orange-300 to-orange-500 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
                             </button>
                             
@@ -324,7 +324,7 @@ const Game = () => {
                                 onClick={() => setDifficulty('hard')} 
                                 className={`group relative px-8 sm:px-12 py-3 bg-gradient-to-br from-red-600 to-red-800 text-white text-lg sm:text-xl font-bold rounded-lg shadow-lg hover:shadow-red-500/50 active:scale-95 transition-all duration-200 ${difficultyLevel === 'hard' ? 'border-4 border-green-500'  : 'border-2 border-red-400/50 hover:border-red-400'}`}
                             >
-                                <span className="relative z-10 px-1">🔥 Hard</span>
+                                <span className="relative z-10 px-1">🔥 {language[lan].gameHard}</span>
                                 <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-red-700 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
                             </button>
                         </div>
@@ -335,10 +335,10 @@ const Game = () => {
                         (
                         <div className="flex flex-col justify-center items-center py-12 gap-4">
                             <div className="text-center">
-                                <h2 className="text-2xl font-bold text-white">Waiting for opponent...</h2>
+                                <h2 className="text-2xl font-bold text-white">{language[lan].gameWaitingForOpponen}</h2>
                             </div>
                             <div className="text-center">
-                                <p className="text-cyan-300 text-sm animate-pulse">🎮 Get ready to play!</p>
+                                <p className="text-cyan-300 text-sm animate-pulse">{language[lan].gameGetReadyToPlay}</p>
                             </div>
 
                         </div>
