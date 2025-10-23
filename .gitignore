@@ -29,5 +29,5 @@
 .vscode
 
 # Vault runtime data
-srcs/data/vault/file/
-srcs/data/vault/file.RUNTIME/
+#srcs/data/vault/file/
+#srcs/data/vault/file.RUNTIME/
