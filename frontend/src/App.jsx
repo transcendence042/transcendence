@@ -12,6 +12,7 @@ import Logout  from './Components/Logout'
 import Profile from './Components/Profile'
 import Settings from './Components/Settings'
 import Matches  from './Components/Matches'
+import { Tournaments } from './Components/Tournamenst'
 
 import FriendRequest from './Components/FriendsRequest'
 
@@ -121,6 +122,14 @@ const Components = () => {
             >
               <span className="text-xl mb-1">🏆</span>
               <span className="hidden lg:block">Matches</span>
+            </button>
+
+            <button 
+              className='group relative w-full h-16 flex flex-col justify-center items-center text-xs lg:text-sm font-medium text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-transparent border-l-2 border-transparent hover:border-cyan-400 transition-all duration-200' 
+              onClick={() => navigate('/index/tournaments')}
+            >
+              <span className="text-xl mb-1">23</span>
+              <span className="hidden lg:block">Tournaments</span>
             </button>
 
             <button 
@@ -284,6 +293,7 @@ const Components = () => {
                 <Route path='friendRequest' element={<FriendRequest/>} />
                 <Route path='game' element={<Game/>}/>
                 <Route path='matches' element={<Matches/>}/>
+                <Route path='tournaments' element={<Tournaments/>}/>
                 <Route path='settings' element={<Settings/>}/>
                 <Route path='logout' element={<Logout/>}/>
               </Routes>
