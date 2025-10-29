@@ -32,7 +32,6 @@ import {
   changePassword,
 } from './backend/auth.js';
 import { initializeDatabase, Match, User } from './backend/db.js';
-import { SocketAddress } from 'net';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -109,6 +108,9 @@ var nextRoomId = 1;
 let freeRoomIds = [];
 var roomPlayersAreIn = {};
 
+//tournaments
+var tournaments = {};
+
 //The shift() method returns and removes the first element in the array
 function createRoomId() {
     if (freeRoomIds.length > 0) {
@@ -144,6 +146,27 @@ console.log(Object.entries(gameRooms))
         aiEnabled: room.aiEnabled
     }));
 }
+
+function getTournamentLobbyInfo(userId) {
+
+    let flag = false;
+
+    for (let i in tournaments) {
+        const players = tournaments[i].players;
+        const checkIfPLayerIsIn = players.some(p => p?.userId === userId);
+        if (checkIfPLayerIsIn) {
+            flag = true;
+            io.to(userId).emit("getCurrentTournament", tournaments[i])
+        }
+    }
+    if (!flag) io.to(userId).emit("getCurrentTournament", null)
+    console.log("Getting Tournament Lobby Info:", tournaments);
+    return Object.entries(tournaments).map(([id, tournament]) => ({
+        id,
+        ...tournament
+    }));
+}
+
 
 //Is not neccesary to delete the old gameRooms if any because assigning will overwrite it.
 //this fucntion is not used
@@ -271,6 +294,59 @@ io.on("connection", (socket) => {
     // Join the user’s personal room (based on their ID)
     socket.join(socket.user.id);
     socket.playerRoom = new Map();
+
+
+
+
+
+    //tournaments
+    socket.on("createTournament",  (tournamentName, numberOfPlayers, type) => {
+
+        //checkIf tournament with the same name exists
+        let uniqueName = tournamentName;
+        let count = 1;
+        while (Object.values(tournaments).some(t => t.name === uniqueName)) {
+            uniqueName = tournamentName + '#'.repeat(count);
+            count++;
+        }
+        const tournamentId = Date.now().toString(); //simple unique id
+        tournaments[tournamentId] = {
+            id: tournamentId,
+            name: uniqueName,
+            numberOfPlayers: numberOfPlayers,
+            type: type,
+            players: [],
+            matches: [],
+            status: 'waiting' //waiting, ongoing, finished
+        };
+        tournaments[tournamentId].players.push({userId: socket.user.id, username: socket.user.username})
+        socket.join(tournamentId);
+        console.log(`the ${uniqueName} TOURNAMENT has been created`)
+        io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id));
+    })
+
+    socket.on("removePlayerFromTournament", (playerId, tournamentId) => {
+        const tournament = tournaments[tournamentId];
+        if (!tournament) return ;
+        const players = tournament.players
+        if (players.length <= 0) {delete tournaments[tournamentId]; return}
+        tournament.players = players.filter(p => p?.useId === playerId);
+        if (tournament.players.length <= 0) {delete tournaments[tournamentId]}
+        io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id))
+    })
+
+    socket.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id));
+
+
+    socket.on("CheckTournamentLobbies", () => {
+        io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id));
+    })
+
+
+
+
+
+
 
     const joinRooms = () => {
         for (let roomId in gameRooms) {
