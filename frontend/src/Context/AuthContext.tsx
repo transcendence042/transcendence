@@ -1,15 +1,20 @@
 import { createContext, useState, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
+import type { User, AuthContextType, LanguageContent } from "../types";
 
-export const AuthContext = createContext();
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthContextProvider({children}) {
+interface AuthContextProviderProps {
+  children: ReactNode;
+}
 
-
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('token') || null);
-    const [loading, setLoading] = useState(true);
-    const [lan, setLan] = useState(localStorage.getItem('language') || 'en');
-    const language = {
+export function AuthContextProvider({ children }: AuthContextProviderProps): React.ReactElement {
+    const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(localStorage.getItem('token') || null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [lan, setLan] = useState<string>(localStorage.getItem('language') || 'en');
+    
+    const language: Record<string, LanguageContent> = {
     // English
     en: {
         Game: 'game',
@@ -727,19 +732,22 @@ export function AuthContextProvider({children}) {
     }
 }
 
-    const socketRef = useRef(null);
+    const socketRef = useRef<any>(null);
 
     // Check authentication
     useEffect(() => {
-        const checkAuth = async () => {
+        const checkAuth = async (): Promise<void> => {
             if (!token) {
                 setUser(null);
                 setLoading(false);
                 console.log("You are not allow!")
                 return ;
             }
+            
+            setLoading(true); // AÑADIR: Asegurar que loading está activo cuando verificamos
+            
             try {
-                const res = await fetch('/api/auth/me', {
+                const res = await fetch('http://localhost:3000/api/auth/me', {
                     headers: {'Authorization': `Bearer ${token}`}
                 })
                 if (res.ok) {
@@ -747,10 +755,16 @@ export function AuthContextProvider({children}) {
                     setUser(data.user)
                 } else {
                     console.log("token is invalid");
+                    localStorage.removeItem('token');
+                    setToken(null);
+                    setUser(null);
                 }
 
             } catch {
                 console.log("token is invalid");
+                localStorage.removeItem('token');
+                setToken(null);
+                setUser(null);
             } finally {
                 setLoading(false)
             }
@@ -759,18 +773,45 @@ export function AuthContextProvider({children}) {
         checkAuth();
     }, [token])
 
+    // Login function - CORREGIR PARA RESETEAR ESTADO
+    const login = (newToken: string): void => {
+        setLoading(true); // AÑADIR: Activar loading al hacer login
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
+    };
+
+    // Logout function - CORREGIR PARA RESETEAR ESTADO COMPLETAMENTE
+    const logout = (): void => {
+        setLoading(true); // AÑADIR: Activar loading al hacer logout
+        localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
+        // No setear loading(false) aquí - lo hará el useEffect cuando token sea null
+    };
+
+    // Set language function
+    const setLanguage = (newLan: string): void => {
+        setLan(newLan);
+        localStorage.setItem('language', newLan);
+    };
+
+    const contextValue: AuthContextType = {
+        user, 
+        setUser, 
+        token, 
+        setToken, 
+        loading, 
+        setLoading,
+        language,
+        lan,
+        setLan,
+        login,
+        logout,
+        setLanguage
+    };
+
     return (
-        <AuthContext.Provider value={{
-            user, 
-            setUser, 
-            token, 
-            setToken, 
-            loading, 
-            setLoading,
-            language,
-            lan,
-            setLan
-        }}>
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     )

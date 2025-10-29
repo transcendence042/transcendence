@@ -1,11 +1,79 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../Context/AuthContext';
+import type { AuthContextType } from '../types';
 
-const FriendRequest = () => {
-     const [friendRequests, setFriendRequests] = useState([]);
-     const {token, language, lan} = useContext(AuthContext);
+interface FriendRequestData {
+    id: number;
+    User: {
+        username: string;
+        avatar?: string;
+    };
+}
 
-    const showFriendRequests = async () => {
+const FriendRequest: React.FC = (): React.ReactElement => {
+    const [friendRequests, setFriendRequests] = useState<FriendRequestData[]>([]);
+    const authContext = useContext(AuthContext) as AuthContextType | undefined;
+    
+    if (!authContext) {
+        throw new Error('FriendRequest must be used within an AuthContextProvider');
+    }
+    
+    const { token, language, lan } = authContext;
+
+    // 🔧 FUNCIÓN HELPER PARA ACCESO SEGURO A LANGUAGE
+    const getText = (key: string): string => {
+        if (!language) {
+            console.warn('Language object is not available');
+            return getFallback(key);
+        }
+        
+        if (!lan) {
+            console.warn('Language code (lan) is not available');
+            return getFallback(key);
+        }
+        
+        if (!(lan in language)) {
+            console.warn(`Language '${lan}' is not available in language object`);
+            return getFallback(key);
+        }
+        
+        const languageData = language[lan];
+        if (!languageData || typeof languageData !== 'object') {
+            console.warn(`Language data for '${lan}' is null, undefined or not an object`);
+            return getFallback(key);
+        }
+        
+        if (!(key in languageData)) {
+            console.warn(`Key '${key}' not found in language '${lan}'`);
+            return getFallback(key);
+        }
+        
+        const languageRecord = languageData as unknown as Record<string, unknown>;
+        const value = languageRecord[key];
+        
+        if (value === undefined) {
+            console.warn(`Value for key '${key}' is undefined`);
+            return getFallback(key);
+        }
+        
+        return typeof value === 'string' ? value : getFallback(key);
+    };
+
+    // 🔧 FUNCIÓN AUXILIAR PARA FALLBACKS
+    const getFallback = (key: string): string => {
+        const fallbacks: Record<string, string> = {
+            'profileNoFriendsYet': 'No Friend Requests',
+            'frNoFriendRequestMsg': "Manage your incoming friend requests",
+            'frWantsToBeYourFriend': 'Wants to be your friend',
+            'frAcceptFriend': 'Accept',
+            'frDeclineFriend': 'Decline',
+            'frNoFriendRequest': 'No Friend Requests'
+        };
+        
+        return fallbacks[key] || key;
+    };
+
+    const showFriendRequests = async (): Promise<void> => {
         try {
             const res = await fetch('http://localhost:3000/api/user/friend-getFriendRequests', {
                 method: 'GET',
@@ -15,14 +83,14 @@ const FriendRequest = () => {
                 const data = await res.json();
                 const loggg = data.friendRequest;
                 setFriendRequests(data.friendRequest);
-                console.log("plot", loggg.map(f => (`username: ${f.User.username} - avatar: ${f.User.avatar}`)))
+                console.log("plot", loggg.map((f: FriendRequestData) => (`username: ${f.User.username} - avatar: ${f.User.avatar}`)))
             }
         } catch (err) {
             alert(err);
         }
     }
 
-    const respondeFriendRequest = async (requestId, action) => {
+    const respondeFriendRequest = async (requestId: number, action: string): Promise<void> => {
         try {
             const res = await fetch('http://localhost:3000/api/user/friend-response', {
                 method: 'POST',
@@ -48,9 +116,9 @@ const FriendRequest = () => {
             <div className="mb-8">
                 <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 mb-2 tracking-tight flex items-center gap-3">
                     <span>👋</span>
-                    {language[lan].profileNoFriendsYet}
+                    {getText('profileNoFriendsYet')}
                 </h1>
-                <p className="text-gray-400 text-sm">{language[lan].frNoFriendRequestMsg || "Manage your incoming friend requests"}</p>
+                <p className="text-gray-400 text-sm">{getText('frNoFriendRequestMsg') || "Manage your incoming friend requests"}</p>
             </div>
 
             {/* Friend Requests List */}
@@ -79,7 +147,7 @@ const FriendRequest = () => {
                                 <h2 className='text-2xl font-bold text-white group-hover:text-amber-400 transition-colors duration-200'>
                                     {friend.User.username}
                                 </h2>
-                                <p className="text-sm text-gray-400 mt-1">{language[lan].frWantsToBeYourFriend}</p>
+                                <p className="text-sm text-gray-400 mt-1">{getText('frWantsToBeYourFriend')}</p>
                             </div>
                             
                             {/* Action buttons */}
@@ -89,14 +157,14 @@ const FriendRequest = () => {
                                     className='group/btn bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 active:scale-95 flex items-center gap-2'
                                 >
                                     <span>✓</span>
-                                    {language[lan].frAcceptFriend}
+                                    {getText('frAcceptFriend')}
                                 </button>
                                 <button  
                                     onClick={() => respondeFriendRequest(friend.id, 'reject')} 
                                     className='group/btn bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105 active:scale-95 flex items-center gap-2'
                                 >
                                     <span>✕</span>
-                                    {language[lan].frDeclineFriend}
+                                    {getText('frDeclineFriend')}
                                 </button>
                             </div>
                         </div>
@@ -108,10 +176,10 @@ const FriendRequest = () => {
                         <div className="flex flex-col items-center justify-center">
                             <div className="text-7xl mb-6 opacity-50">📭</div>
                             <h1 className='text-2xl font-bold text-white/90 mb-2'>
-                                {language[lan].frNoFriendRequest}
+                                {getText('frNoFriendRequest')}
                             </h1>
                             <p className="text-gray-400 max-w-md">
-                                {language[lan].frNoFriendRequestMsg || "You don't have any pending friend requests at the moment. When someone sends you a request, it will appear here."}
+                                {getText('frNoFriendRequestMsg') || "You don't have any pending friend requests at the moment. When someone sends you a request, it will appear here."}
                             </p>
                         </div>
                     </div>
