@@ -8,7 +8,9 @@ export const Tournaments = () => {
     const {user} = useContext(AuthContext);
     const [lobbyState, setLobbyState] = useState([]);
     const [currentTournament, setCurrentTournament] = useState(null);
-
+    const [createTournamentLog, setCreateTournamentLog] = useState(false)
+    const [tournamentNameState, setTournamentNameState] = useState(`${user?.username || ''}'s tournament`)
+    const [numOfPlayerState, setNumOfPlayerState] = useState('');
 
     useEffect( () => {
 
@@ -34,10 +36,11 @@ export const Tournaments = () => {
 
 
     const createNewTournament = () => {
-        const name = "2323232"
-        const numberOfPlayers = 4;
+        if (tournamentNameState === '') {alert("The tournament name cannot be empty!"); return} 
+        else if ((numOfPlayerState !== '4' && numOfPlayerState !== '8' && numOfPlayerState !== '16'  && numOfPlayerState !== '32'  && numOfPlayerState !== '64')) {alert("The number of players should be multiple of 4"); return}
         const type = "elimination"
-        socket.emit("createTournament", name, numberOfPlayers, type)
+        socket.emit("createTournament", tournamentNameState, numOfPlayerState, type)
+        setCreateTournamentLog(false);
     }
 
     const handleGetOutOfTournament = () => {
@@ -51,13 +54,46 @@ export const Tournaments = () => {
         socket.emit("joinTournament", tournament.id, tournament.name, user.id)
     }
 
+    const checkNUmOfPlayers = (e) => {
+        const value = e.target.value;
+        if (value === '' || /^\d+$/.test(value)) {
+            if (value.length > 2)
+            {
+                setNumOfPlayerState(value.slice(0, 2))
+                return;
+            }
+            setNumOfPlayerState(value)
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center py-12 px-4">
             <div className="w-full max-w-3xl mx-auto">
                 <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-10 text-center tracking-tight drop-shadow-lg">Tournaments</h1>
-
-                {currentTournament ? (
+                {
+                    createTournamentLog &&
+                    <div className="flex flex-col gap-8 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 rounded-xl p-8 shadow-2xl border border-emerald-500/20 w-full max-w-md mx-auto">
+                        <input
+                            value={tournamentNameState}
+                            onChange={(e) => setTournamentNameState(e.target.value)}
+                            placeholder="Enter Tournament's Name"
+                            className="px-4 py-3 rounded-lg bg-slate-800 text-white placeholder-gray-400 border border-cyan-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-400 font-semibold shadow"
+                        />
+                        <input
+                            value={numOfPlayerState}
+                            onChange={(e) => checkNUmOfPlayers(e)}
+                            className="px-4 py-3 rounded-lg bg-slate-800 text-white placeholder-gray-400 border border-cyan-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-400 font-semibold shadow"
+                            placeholder="Number of Players (4, 8, 16, ...)"
+                        />
+                        <button
+                            onClick={() => createNewTournament()}
+                            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-bold rounded-lg shadow-lg transition-all text-lg mt-2"
+                        >
+                            Create New Tournament
+                        </button>
+                    </div>
+                }
+                {!createTournamentLog &&  (currentTournament  ? (
                     <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border border-emerald-500/20 rounded-xl p-8 shadow-2xl mb-8">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-emerald-400">{currentTournament.name}</h2>
@@ -98,11 +134,11 @@ export const Tournaments = () => {
                         )}
                         <div className="flex flex-col items-center mt-8">
                             <h2 className="text-2xl font-bold text-emerald-400 mb-4">Create Tournament</h2>
-                            <button onClick={createNewTournament} className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-bold rounded-lg shadow-lg transition-all">Create New Tournament</button>
+                            <button onClick={() => setCreateTournamentLog(true)} className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-bold rounded-lg shadow-lg transition-all">Create New Tournament</button>
                             <span className="mt-2 text-gray-400">Total lobbies: {lobbyState.length}</span>
                         </div>
                     </>
-                )}
+                ))}
             </div>
         </div>
     )
