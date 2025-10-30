@@ -151,22 +151,27 @@ function getTournamentLobbyInfo(userId) {
 
     let flag = false;
 
-    for (let i in tournaments) {
-        const players = tournaments[i].players;
-        const checkIfPLayerIsIn = players.some(p => p?.userId === userId);
-        if (checkIfPLayerIsIn) {
-            flag = true;
-            io.to(userId).emit("getCurrentTournament", tournaments[i])
+    //check if this id alias "userId" is from the tournament
+    const tournament = tournaments[userId];
+    if (tournament) {console.log("-----------brodcast message-------------");io.to(userId).emit("getCurrentTournament", tournaments[userId])}
+    else {
+        for (let i in tournaments) {
+            const players = tournaments[i].players;
+            const checkIfPLayerIsIn = players.some(p => p?.userId === userId);
+            if (checkIfPLayerIsIn) {
+                flag = true;
+                io.to(userId).emit("getCurrentTournament", tournaments[i])
+            }
         }
+        if (!flag) io.to(userId).emit("getCurrentTournament", null)
+        console.log("-----------individual message-------------")
     }
-    if (!flag) io.to(userId).emit("getCurrentTournament", null)
     console.log("Getting Tournament Lobby Info:", tournaments);
     return Object.entries(tournaments).map(([id, tournament]) => ({
         id,
         ...tournament
     }));
 }
-
 
 //Is not neccesary to delete the old gameRooms if any because assigning will overwrite it.
 //this fucntion is not used
@@ -330,9 +335,11 @@ io.on("connection", (socket) => {
         if (!tournament) return ;
         const players = tournament.players
         if (players.length <= 0) {delete tournaments[tournamentId]; return}
-        tournament.players = players.filter(p => p?.useId === playerId);
+        tournament.players = players.filter(p => p?.userId !== playerId);
         if (tournament.players.length <= 0) {delete tournaments[tournamentId]}
-        io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id))
+        socket.leave(tournamentId);
+        io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(tournamentId))
+        io.to(playerId).emit("getCurrentTournament", null)
     })
 
     socket.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id));
@@ -340,6 +347,23 @@ io.on("connection", (socket) => {
 
     socket.on("CheckTournamentLobbies", () => {
         io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id));
+    })
+
+    socket.on("joinTournament", (tournamentId, tournamentName, userId) => {
+        const tournament = tournaments[tournamentId];
+        if (!tournament) {console.log("Returning because the tournament doesn't exits");return;}
+
+        //check if player is already in
+        const checkIfPlayerIsIn = tournament.players.some(p => p.userId === socket.user.id);
+        if (checkIfPlayerIsIn) {console.log("Returning because player is in");return;}
+
+        //check if tournament is full
+        const checkIfFull = tournament.players.length >= tournament.numberOfPlayers;
+        if (checkIfFull) {console.log("Returning because the tournament is full");return;}
+
+        socket.join(tournamentId);
+        tournament.players.push({userId: socket.user.id, username: socket.user.username})
+        io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(tournamentId));
     })
 
 

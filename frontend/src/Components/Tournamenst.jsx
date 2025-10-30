@@ -19,7 +19,8 @@ export const Tournaments = () => {
         }
 
         const handleCurrentTournament = (tournament) => {
-            setCurrentTournament(tournament);
+            //alert("sombody has seennnnnnn");
+            setCurrentTournament(currentTournament => tournament);
         }
 
         socket.emit("CheckTournamentLobbies");
@@ -47,6 +48,7 @@ export const Tournaments = () => {
         const name = tournament.name
         const playersIn = lobbyState.find(lobby => lobby.id === tournament.id)?.players.length;
         alert(`this is the anme: ${name} this is how many players in: ${playersIn}`)
+        socket.emit("joinTournament", tournament.id, tournament.name, user.id)
     }
 
 
