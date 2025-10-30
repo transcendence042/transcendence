@@ -7,3 +7,8 @@ Para ello he añadido la dependencia dentro del frontend de ts con el comando np
 Tambien un pluggin para en live con ambos servidores conectados que me fuera saliendo los errores con los cambios y ver que la modificar cada archivo todo terminase igual: npm install -D vite-plugin-checker. El checker lo he añadidod en los plugins en vite.config.js.
 
 HE BORRADO ESLINT PORQUE ME ESTABA DANDO BASTANTES PROBLEMAS POR EL MOMENTO. EN PARTE PORQUE NO ES NECESARIO.
+
+//TODO
+
+/ BACKEND
+
