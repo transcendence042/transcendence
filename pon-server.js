@@ -32,6 +32,7 @@ import {
   changePassword,
 } from './backend/auth.js';
 import { initializeDatabase, Match, User } from './backend/db.js';
+import { escape } from 'querystring';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -346,6 +347,7 @@ io.on("connection", (socket) => {
         socket.leave(tournamentId);
         io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(tournamentId))
         io.to(playerId).emit("getCurrentTournament", null)
+        io.to(tournamentId).emit("startTournament", {tournamentId, started: false})
     })
 
     socket.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id));
@@ -369,7 +371,11 @@ io.on("connection", (socket) => {
 
         socket.join(tournamentId);
         tournament.players.push({userId: socket.user.id, username: socket.user.username, host: false})
+        //check is player is ready to start
         io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(tournamentId));
+        if (tournament.players.length === Number(tournament.numberOfPlayers)) {
+            io.to(tournamentId).emit("startTournament", {tournamentId, started: true})
+        }
     })
 
 

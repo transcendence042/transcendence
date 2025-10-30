@@ -1,6 +1,7 @@
 import { ComponentContext } from "../Context/ComponentsContext"
 import { AuthContext } from "../Context/AuthContext"
 import { useContext, useEffect, useState } from "react"
+import { FaLess } from "react-icons/fa";
 
 
 export const Tournaments = () => {
@@ -11,7 +12,8 @@ export const Tournaments = () => {
     const [createTournamentLog, setCreateTournamentLog] = useState(false)
     const [tournamentNameState, setTournamentNameState] = useState(`${user?.username || ''}'s tournament`)
     const [numOfPlayerState, setNumOfPlayerState] = useState('');
-
+    const [tournamentReady, setTournamentReady] = useState(false);
+    
     useEffect( () => {
 
         if (!socket) return;
@@ -21,16 +23,21 @@ export const Tournaments = () => {
         }
 
         const handleCurrentTournament = (tournament) => {
-            //alert("sombody has seennnnnnn");
             setCurrentTournament(currentTournament => tournament);
+        }
+
+        const handleStartTournament = (tournamentInfoObject) => {
+            setTournamentReady(tournamentInfoObject.started);
         }
 
         socket.emit("CheckTournamentLobbies");
         socket.on("tournamentLobbyInfo", handleTournamentsLobbies)
         socket.on("getCurrentTournament", handleCurrentTournament);
+        socket.on("startTournament", handleStartTournament)
         return () => {
             socket.off("tournamentLobbyInfo", handleTournamentsLobbies)
             socket.off("getCurrentTournament", handleCurrentTournament);
+            socket.off("startTournament", handleStartTournament)
         }
     }, [socket])
 
@@ -71,7 +78,7 @@ export const Tournaments = () => {
             <div className="w-full max-w-3xl mx-auto">
                 <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-10 text-center tracking-tight drop-shadow-lg">Tournaments</h1>
                 {
-                    createTournamentLog &&
+                    (!tournamentReady && createTournamentLog) &&
                     <div className="flex flex-col gap-8 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 rounded-xl p-8 shadow-2xl border border-emerald-500/20 w-full max-w-md mx-auto">
                         <input
                             value={tournamentNameState}
@@ -93,7 +100,7 @@ export const Tournaments = () => {
                         </button>
                     </div>
                 }
-                {!createTournamentLog &&  (currentTournament  ? (
+                {(!tournamentReady && !createTournamentLog) &&  (currentTournament  ? (
                     <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border border-emerald-500/20 rounded-xl p-8 shadow-2xl mb-8">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-emerald-400">{currentTournament.name}</h2>
@@ -146,7 +153,78 @@ export const Tournaments = () => {
                         </div>
                     </>
                 ))}
+                {
+                    tournamentReady &&
+                    <TournamentGame currentTournament={currentTournament}/>
+                }
             </div>
+        </div>
+    )
+}
+
+const TournamentGame = ({currentTournament}) => {
+    const [startTournamentButton, setStartTournamentButton] = useState(false);
+    return (
+        <div className="text-white">
+            {
+                startTournamentButton ?
+                <div>
+                    <button onClick={() => setStartTournamentButton(false)}>StartTournament</button>
+                </div>
+                :
+                <div className="grid grid-cols-2">
+                {
+                    Array.from({ length: currentTournament.numberOfPlayers / 2 }).map((_, pairIndex) => {
+                        const leftPlayer = currentTournament.players[pairIndex * 2];
+                        const rightPlayer = currentTournament.players[pairIndex * 2 + 1];
+                        return (
+                            <div key={pairIndex} className="flex items-center justify-center gap-6 mb-6 col-span-2">
+                                {/* Left Player Card */}
+                                {leftPlayer ? (
+                                    <div className={`bg-slate-900 border ${leftPlayer.host ? 'border-cyan-400' : 'border-emerald-500/30'} rounded-lg p-4 flex flex-col items-center shadow hover:shadow-cyan-500/20 transition-all relative w-40`}>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-2 ${leftPlayer.host ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white border-2 border-cyan-400 shadow-lg' : 'bg-slate-800 text-white'}`}>
+                                            {leftPlayer.username[0]?.toUpperCase()}
+                                        </div>
+                                        <div className={`font-semibold ${leftPlayer.host ? 'text-cyan-300' : 'text-white'}`}>{leftPlayer.username}</div>
+                                        {leftPlayer.host === true && (
+                                            <div className="absolute top-2 right-2 flex items-center gap-1">
+                                                <span className="inline-block bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold px-2 py-1 rounded border border-cyan-400 shadow" title="Host">HOST</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-800 border border-gray-700 rounded-lg p-4 flex flex-col items-center justify-center text-gray-400 shadow w-40">
+                                        <span className="text-2xl">🪑</span>
+                                        <span className="mt-2">Available Seat</span>
+                                    </div>
+                                )}
+                                {/* VS Indicator */}
+                                <span className="text-3xl font-bold text-cyan-400 mx-2 select-none">VS</span>
+                                {/* Right Player Card */}
+                                {rightPlayer ? (
+                                    <div className={`bg-slate-900 border ${rightPlayer.host ? 'border-cyan-400' : 'border-emerald-500/30'} rounded-lg p-4 flex flex-col items-center shadow hover:shadow-cyan-500/20 transition-all relative w-40`}>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-2 ${rightPlayer.host ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white border-2 border-cyan-400 shadow-lg' : 'bg-slate-800 text-white'}`}>
+                                            {rightPlayer.username[0]?.toUpperCase()}
+                                        </div>
+                                        <div className={`font-semibold ${rightPlayer.host ? 'text-cyan-300' : 'text-white'}`}>{rightPlayer.username}</div>
+                                        {rightPlayer.host === true && (
+                                            <div className="absolute top-2 right-2 flex items-center gap-1">
+                                                <span className="inline-block bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold px-2 py-1 rounded border border-cyan-400 shadow" title="Host">HOST</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-800 border border-gray-700 rounded-lg p-4 flex flex-col items-center justify-center text-gray-400 shadow w-40">
+                                        <span className="text-2xl">🪑</span>
+                                        <span className="mt-2">Available Seat</span>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })
+                }
+                </div>
+            }
         </div>
     )
 }
