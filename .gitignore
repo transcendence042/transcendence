@@ -1,0 +1,33 @@
+# Ignore secrets and environment files
+#.env
+#srcs/.env
+
+# Ignore secrets folders
+#secrets/
+#srcs/secrets/
+
+# Ignore Vault data
+#srcs/data/vault/file/
+
+# Ignore certificate and key files
+#*.pem
+#*.key
+
+# Node modules (si usas Node.js)
+#node_modules/
+
+# Archivos temporales de sistema
+#*.swp
+#*.swo
+#*.tmp
+
+# Archivos de log generados en desarrollo
+#*.log
+
+
+# Ignore VS Code settings
+.vscode
+
+# Vault runtime data
+#srcs/data/vault/file/
+#srcs/data/vault/file.RUNTIME/
