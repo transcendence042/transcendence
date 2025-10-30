@@ -53,53 +53,57 @@ export const Tournaments = () => {
 
 
     return (
-        <div className="text-white">
-        {
-            currentTournament &&
-            <div className="">
-                <button onClick={() => handleGetOutOfTournament()}>GetOut</button>
-                <div>{currentTournament.name}</div>
-                {
-                    Array.from({ length: currentTournament.numberOfPlayers }).map((_, index) => {
-                        const player = currentTournament.players[index];
-                        return player ? (
-                        <div key={index}>
-                            <div>{player.username}</div>
-                        </div>
-                        ) : (
-                        <div key={index}>available seat</div>
-                        );
-                    })
-                }
-            </div>
-        }
-        {
-            (!currentTournament && lobbyState.length > 0) ?
-                <div>
-                {   lobbyState.map((lobby, index) => 
-                    <button onClick={() => showTournamentInfo(lobby)} key={index}>
-                        <div>
-                            tournament Name: {lobby.name}
-                        </div>
-                        <div>
-                            players N: {lobby.players.length}/{lobby.numberOfPlayers}
-                        </div>
-                    </button>)
-                }
-                    <div>
-                        <h1>Create Tournament titlte</h1>
-                        <button onClick={() => createNewTournament()}>createNewTournament</button>
-                        <span>{lobbyState.length}</span>
-                    </div>
-                </div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center py-12 px-4">
+            <div className="w-full max-w-3xl mx-auto">
+                <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-10 text-center tracking-tight drop-shadow-lg">Tournaments</h1>
 
-                : (!currentTournament) &&
-                <div>
-                    <h1>Create Tournament titlte</h1>
-                    <button onClick={() => createNewTournament()}>createNewTournament</button>
-                    <span>{lobbyState.length}</span>
-                </div>
-        }
+                {currentTournament ? (
+                    <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border border-emerald-500/20 rounded-xl p-8 shadow-2xl mb-8">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-emerald-400">{currentTournament.name}</h2>
+                            <button onClick={handleGetOutOfTournament} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold shadow transition-all">Leave Tournament</button>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {Array.from({ length: currentTournament.numberOfPlayers }).map((_, index) => {
+                                const player = currentTournament.players[index];
+                                return player ? (
+                                    <div key={index} className="bg-slate-900 border border-emerald-500/30 rounded-lg p-4 flex flex-col items-center shadow hover:shadow-emerald-500/20 transition-all">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-xl font-bold text-white mb-2">{player.username[0]?.toUpperCase()}</div>
+                                        <div className="font-semibold text-white">{player.username}</div>
+                                    </div>
+                                ) : (
+                                    <div key={index} className="bg-slate-800 border border-gray-700 rounded-lg p-4 flex flex-col items-center justify-center text-gray-400 shadow">
+                                        <span className="text-2xl">🪑</span>
+                                        <span className="mt-2">Available Seat</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {lobbyState.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                                {lobbyState.map((lobby, index) => (
+                                    <button onClick={() => showTournamentInfo(lobby)} key={index} className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border border-cyan-500/20 rounded-xl p-6 shadow-xl flex flex-col items-start hover:border-emerald-400 hover:shadow-emerald-500/20 transition-all">
+                                        <div className="text-lg font-bold text-cyan-400 mb-2">{lobby.name}</div>
+                                        <div className="text-sm text-gray-300">Players: <span className="font-semibold text-white">{lobby.players.length}</span> / {lobby.numberOfPlayers}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-16">
+                                <p className="text-gray-400 text-lg mb-4">No tournaments available. Create one!</p>
+                            </div>
+                        )}
+                        <div className="flex flex-col items-center mt-8">
+                            <h2 className="text-2xl font-bold text-emerald-400 mb-4">Create Tournament</h2>
+                            <button onClick={createNewTournament} className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-bold rounded-lg shadow-lg transition-all">Create New Tournament</button>
+                            <span className="mt-2 text-gray-400">Total lobbies: {lobbyState.length}</span>
+                        </div>
+                    </>
+                )}
+            </div>
         </div>
     )
 }
