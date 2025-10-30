@@ -303,7 +303,6 @@ io.on("connection", (socket) => {
 
 
 
-
     //tournaments
     socket.on("createTournament",  (tournamentName, numberOfPlayers, type) => {
 
@@ -324,7 +323,7 @@ io.on("connection", (socket) => {
             matches: [],
             status: 'waiting' //waiting, ongoing, finished
         };
-        tournaments[tournamentId].players.push({userId: socket.user.id, username: socket.user.username})
+        tournaments[tournamentId].players.push({userId: socket.user.id, username: socket.user.username, host: true})
         socket.join(tournamentId);
         console.log(`the ${uniqueName} TOURNAMENT has been created`)
         io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id));
@@ -337,6 +336,13 @@ io.on("connection", (socket) => {
         if (players.length <= 0) {delete tournaments[tournamentId]; return}
         tournament.players = players.filter(p => p?.userId !== playerId);
         if (tournament.players.length <= 0) {delete tournaments[tournamentId]}
+
+        //check if there's a host if not make a second first palyer to join to host
+        const checkIFAnyHost = tournament.players.some(p => p?.host === true);
+        if (!checkIFAnyHost && tournament.players.length > 0) {
+            tournament.players[0].host = true;
+        }
+
         socket.leave(tournamentId);
         io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(tournamentId))
         io.to(playerId).emit("getCurrentTournament", null)
@@ -362,7 +368,7 @@ io.on("connection", (socket) => {
         if (checkIfFull) {console.log("Returning because the tournament is full");return;}
 
         socket.join(tournamentId);
-        tournament.players.push({userId: socket.user.id, username: socket.user.username})
+        tournament.players.push({userId: socket.user.id, username: socket.user.username, host: false})
         io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(tournamentId));
     })
 

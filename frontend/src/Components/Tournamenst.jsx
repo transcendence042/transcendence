@@ -103,9 +103,16 @@ export const Tournaments = () => {
                             {Array.from({ length: currentTournament.numberOfPlayers }).map((_, index) => {
                                 const player = currentTournament.players[index];
                                 return player ? (
-                                    <div key={index} className="bg-slate-900 border border-emerald-500/30 rounded-lg p-4 flex flex-col items-center shadow hover:shadow-emerald-500/20 transition-all">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-xl font-bold text-white mb-2">{player.username[0]?.toUpperCase()}</div>
-                                        <div className="font-semibold text-white">{player.username}</div>
+                                    <div key={index} className={`bg-slate-900 border ${player.host ? 'border-cyan-400' : 'border-emerald-500/30'} rounded-lg p-4 flex flex-col items-center shadow hover:shadow-cyan-500/20 transition-all relative`}>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-2 ${player.host ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white border-2 border-cyan-400 shadow-lg' : 'bg-slate-800 text-white'}`}>
+                                            {player.username[0]?.toUpperCase()}
+                                        </div>
+                                        <div className={`font-semibold ${player.host ? 'text-cyan-300' : 'text-white'}`}>{player.username}</div>
+                                        {player.host === true && (
+                                            <div className="absolute top-2 right-2 flex items-center gap-1">
+                                                <span className="inline-block bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold px-2 py-1 rounded border border-cyan-400 shadow" title="Host">HOST</span>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div key={index} className="bg-slate-800 border border-gray-700 rounded-lg p-4 flex flex-col items-center justify-center text-gray-400 shadow">
