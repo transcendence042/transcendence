@@ -5,15 +5,15 @@ all:
 	@mkdir -p /home/${USER}/data/backend
 	@mkdir -p /home/${USER}/data/frontend
 	@printf "Building and setting configuration for ${NAME}...\n"
-	@docker-compose -f srcs/docker-compose.yml up -d --build
+	@docker compose -f srcs/docker-compose.yml up -d --build
 
 build:
 	@printf "Building ${NAME} containers...\n"
-	@docker-compose -f srcs/docker-compose.yml build
+	@docker compose -f srcs/docker-compose.yml build
 
 down:
 	@printf "Stopping ${NAME}...\n"
-	@docker-compose -f srcs/docker-compose.yml down
+	@docker compose -f srcs/docker-compose.yml down
 
 clean: down
 	@printf "Stopping and cleaning up all docker configurations of ${NAME}...\n"
@@ -35,15 +35,15 @@ re: clean all
 
 logs:
 	@printf "Following logs for ${NAME}...\n"
-	@docker-compose -f srcs/docker-compose.yml logs -f
+	@docker compose -f srcs/docker-compose.yml logs -f
 
 status:
 	@printf "Status of ${NAME} containers:\n"
-	@docker-compose -f srcs/docker-compose.yml ps
+	@docker compose -f srcs/docker-compose.yml ps
 
 restart:
 	@printf "Restarting ${NAME}...\n"
-	@docker-compose -f srcs/docker-compose.yml restart
+	@docker compose -f srcs/docker-compose.yml restart
 
 
 

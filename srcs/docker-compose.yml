@@ -2,7 +2,7 @@
 
 services:
   backend:
-    build: ./backend
+    build: ./../backend
     container_name: transcendence-backend
     restart: unless-stopped
     networks:
@@ -28,7 +28,7 @@ services:
       # - ./srcs/secrets:/app/secrets
 
   frontend:
-    build: ./frontend
+    build: ./../frontend
     container_name: transcendence-frontend
     restart: unless-stopped
     ports:
