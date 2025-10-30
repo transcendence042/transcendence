@@ -8,7 +8,12 @@ Tambien un pluggin para en live con ambos servidores conectados que me fuera sal
 
 HE BORRADO ESLINT PORQUE ME ESTABA DANDO BASTANTES PROBLEMAS POR EL MOMENTO. EN PARTE PORQUE NO ES NECESARIO.
 
-//TODO
+---
 
-/ BACKEND
+Tras de jsx a tsx estan arreglados los conflictos y el proyecto arranca
 
+### Nuevos cambios
+
+- Deshabilidato oauth de momento
+
+- Creada la carpeta public y quitado del arranque del backend la carga de css y de ts porque no es necesario y daba problemas de arranque

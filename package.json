@@ -5,11 +5,10 @@
   "type": "module",
   "scripts": {
     "start": "node pon-server.js",
-    "build:css": "tailwindcss -i ./src/input.css -o ./public/style.css --watch",
     "build:ts": "tsc --watch",
     "build:ts-once": "tsc",
     "clean": "rm -f public/*.js public/*.js.map public/*.d.ts",
-    "dev": "npm run build:css & npm run build:ts & npm start",
+    "dev": "npm start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

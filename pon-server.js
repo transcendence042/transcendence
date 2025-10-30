@@ -51,7 +51,7 @@ app.register(fastifyStatic, {
     root: path.join(__dirname, 'public')
 });
 
-// Google OAuth2 setup
+/* // Google OAuth2 setup
 await app.register(oauthPlugin, {
   name: 'googleOAuth2',
   //The permissions the app requests from Google (basic identity, email, and profile info).
@@ -68,10 +68,10 @@ await app.register(oauthPlugin, {
   //The URL where Google will redirect users after they log in.
   callbackUri: process.env.GOOGLE_CALLBACK_URL,
 });
-
+ */
 
 // Auth routes
-app.get('/auth/google/callback', authGoogleCallback);
+//app.get('/auth/google/callback', authGoogleCallback);
 app.post('/api/auth/register', register);
 app.post('/api/auth/login', login);
 app.post('/api/auth/logout', { preHandler: authenticate }, logout);
