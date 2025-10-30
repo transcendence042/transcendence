@@ -1,92 +1,50 @@
-# ══ Names ══════════════════════════════════════════════════════════════════ #
-#    -----                                                                    #
+NAME = transcendence
 
-NAME 				= transcendence
+all:
+	@mkdir -p /home/${USER}/data
+	@mkdir -p /home/${USER}/data/backend
+	@mkdir -p /home/${USER}/data/frontend
+	@printf "Building and setting configuration for ${NAME}...\n"
+	@docker-compose -f srcs/docker-compose.yml up -d --build
 
-# ══ Colors ═════════════════════════════════════════════════════════════════ #
-#    ------                                                                   #
+build:
+	@printf "Building ${NAME} containers...\n"
+	@docker-compose -f srcs/docker-compose.yml build
 
-DEL_LINE 			= \033[2K
-ITALIC 				= \033[3m
-BOLD 				= \033[1m
-DEF_COLOR 			= \033[0;39m
-GRAY 				= \033[0;90m
-RED 				= \033[0;91m
-GREEN 				= \033[0;92m
-YELLOW 				= \033[0;93m
-BLUE 				= \033[0;94m
-MAGENTA 			= \033[0;95m
-CYAN 				= \033[0;96m
-WHITE 				= \033[0;97m
-BLACK 				= \033[0;99m
-ORANGE 				= \033[38;5;209m
-BROWN 				= \033[38;2;184;143;29m
-DARK_GRAY 			= \033[38;5;234m
-MID_GRAY 			= \033[38;5;245m
-DARK_GREEN 			= \033[38;2;75;179;82m
-DARK_YELLOW 		= \033[38;5;143m
+down:
+	@printf "Stopping ${NAME}...\n"
+	@docker-compose -f srcs/docker-compose.yml down
 
-# ══ Compilation═════════════════════════════════════════════════════════════ #
-#    -----------                                                              #
-
-CC 					= clang
-AR 					= ar rcs
-RM 					= rm -f
-RMR					= rm -f -r
-MK 					= make -C -g
-MKD					= mkdir -p
-MCL 				= make clean -C
-MFCL 				= make fclean -C
-MK_					= && make
-
-# ══ Directories ════════════════════════════════════════════════════════════ #
-#    -----------                                                              #
-
-SRC_DIR				= ./src
-OBJ_DIR				= ./obj
-INCLUDES_DIR		= ./includes
-
-# ══ Flags ══════════════════════════════════════════════════════════════════ #
-#    -----                                                                    #
-
-CFLAGS 				= -Wall -Werror -Wextra -fsanitize=thread -g
-IFLAGS				= -I${INCLUDES_DIR}
-LFLAGS				= -lpthread	
-
-# ══ Sources ════════════════════════════════════════════════════════════════ #
-#    -------                                                                  #
-
-SRC 				= ${SRC_DIR}/xxx.c
-
-
-
-OBJ_SRC				= $(patsubst ${SRC_DIR}/%.c, ${OBJ_DIR}/%.o, ${SRC})
-
-OBJS				= ${OBJ_SRC}
-
-# ═══ Rules ═════════════════════════════════════════════════════════════════ #
-#     -----                                                                   #
-
-all: ${NAME}
-
-${NAME}: ${OBJS}
-	@echo "$(YELLOW)Compiling root ...$(DEF_COLOR)"
-	@${CC} ${CFLAGS} ${IFLAGS} -o ${NAME} ${OBJS} ${LFLAGS}
-	@echo "$(GREEN) $(NAME) all created ✓$(DEF_COLOR)"
-
-${OBJ_DIR}/%.o: ${SRC_DIR}/%.c
-	@${MKD} $(dir $@)
-	@$(CC) ${CFLAGS} ${IFLAGS} -c $< -o $@
-
-clean:
-	@echo "$(YELLOW)Removing object files ...$(DEF_COLOR)"
-	@$(RM) ${OBJ_DIR}/*.o
-	@echo "$(RED)Object files removed $(DEF_COLOR)"
+clean: down
+	@printf "Stopping and cleaning up all docker configurations of ${NAME}...\n"
+	@docker system prune -a
 
 fclean:
-	@echo "$(YELLOW)Removing executables ...$(DEF_COLOR)"
-	@${RM} ${NAME}
-	@echo "$(RED)Executable removed $(DEF_COLOR)"
-re: fclean all
+	@printf "Cleaning all configuration of ${NAME} and both volumes and host data...\n"
+	@if [ -n "$$(docker ps -qa)" ]; then docker stop $$(docker ps -qa); fi
+	@docker system prune --all --force --volumes
+	@docker network prune --force
+	@docker volume prune --force
+	@docker image prune --all --force
+	@docker container prune --force
+	@docker builder prune --all --force
+	@if [ -n "$$(docker volume ls -q)" ]; then docker volume rm $$(docker volume ls -q); fi
+	@if [ -d "/home/${USER}/data" ]; then sudo rm -rf /home/${USER}/data; fi
 
-.PHONY : all clean fclean re
+re: clean all
+
+logs:
+	@printf "Following logs for ${NAME}...\n"
+	@docker-compose -f srcs/docker-compose.yml logs -f
+
+status:
+	@printf "Status of ${NAME} containers:\n"
+	@docker-compose -f srcs/docker-compose.yml ps
+
+restart:
+	@printf "Restarting ${NAME}...\n"
+	@docker-compose -f srcs/docker-compose.yml restart
+
+
+
+.PHONY: all build down clean fclean re logs status restart

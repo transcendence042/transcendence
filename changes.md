@@ -12,8 +12,53 @@ HE BORRADO ESLINT PORQUE ME ESTABA DANDO BASTANTES PROBLEMAS POR EL MOMENTO. EN 
 
 Tras de jsx a tsx estan arreglados los conflictos y el proyecto arranca
 
-### Nuevos cambios
+## Guía del Makefile para el proyecto Transcendence
 
-- Deshabilidato oauth de momento
+### Reglas principales:
 
-- Creada la carpeta public y quitado del arranque del backend la carga de css y de ts porque no es necesario y daba problemas de arranque
+#### `make all` (por defecto)
+- Crea directorios de datos en `/home/${USER}/data/` para persistencia
+- Construye todas las imágenes Docker desde cero
+- Levanta todos los servicios (backend + frontend) en modo detached (-d)
+- **Uso típico:** Primera vez que ejecutas el proyecto o después de cambios importantes
+
+#### `make build`
+- Solo construye las imágenes Docker sin ejecutarlas
+- Útil para verificar que los Dockerfiles están correctos
+- **Uso típico:** Después de cambiar Dockerfiles pero antes de levantar servicios
+
+#### `make down`
+- Para todos los contenedores del proyecto
+- Los contenedores siguen existiendo, solo están parados
+- **Uso típico:** Cuando quieres parar temporalmente el proyecto
+
+#### `make clean`
+- Para todos los contenedores + ejecuta `docker system prune -a`
+- Elimina imágenes no utilizadas, contenedores parados, redes y caché de build
+- **Uso típico:** Limpieza intermedia para liberar espacio
+
+#### `make fclean`
+- **Limpieza total y destructiva**
+- Para todos los contenedores del sistema
+- Elimina todos los volúmenes, imágenes, redes, contenedores y caché
+- Borra físicamente `/home/${USER}/data/` (base de datos incluida)
+- **Uso típico:** Reset total del entorno Docker
+
+#### `make re`
+- Equivale a `make clean && make all`
+- Limpieza intermedia + construcción completa
+- **Uso típico:** Cuando quieres reiniciar limpio pero conservando algunos datos
+
+### Reglas de monitoreo:
+
+#### `make logs`
+- Muestra y sigue los logs de todos los contenedores en tiempo real
+- **Uso típico:** Debug de errores o monitoreo durante desarrollo
+
+#### `make status`
+- Muestra el estado actual de todos los contenedores (running, stopped, etc.)
+- **Uso típico:** Verificar rápidamente qué servicios están activos
+
+#### `make restart`
+- Reinicia todos los contenedores sin reconstruir imágenes
+- **Uso típico:** Aplicar cambios de configuración sin rebuild
