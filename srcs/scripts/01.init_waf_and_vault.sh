@@ -8,14 +8,30 @@ set -euo pipefail
 BASE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 SRC_DIR="$BASE_DIR/srcs"
 
+# Allow new layout where `secrets/` lives at repo root (preferred) or fall back to
+# legacy `srcs/secrets/`. This mirrors the logic in 00.gen_selfsigned_cert.sh so
+# both scripts behave consistently after the redesign.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+if [ -n "${SECRETS_ROOT:-}" ]; then
+  SECRETS_ROOT="$SECRETS_ROOT"
+elif [ -d "$REPO_ROOT/secrets" ] || [ ! -d "$REPO_ROOT/srcs/secrets" ]; then
+  SECRETS_ROOT="$REPO_ROOT/secrets"
+else
+  SECRETS_ROOT="$SRC_DIR/secrets"
+fi
+
 LOGS_NGX_DIR="$SRC_DIR/logs/nginx"
 LOGS_MODSEC_DIR="$SRC_DIR/logs/modsec"
-SECRETS_VAULT_DIR="$SRC_DIR/secrets/vault"
-SECRETS_APPROLE_DIR="$SRC_DIR/secrets/api-approle"
-CERTS_DIR="$SRC_DIR/secrets/certs"
+SECRETS_VAULT_DIR="$SECRETS_ROOT/vault"
+SECRETS_APPROLE_DIR="$SECRETS_ROOT/api-approle"
+CERTS_DIR="$SECRETS_ROOT/certs"
 
-VAULT_CFG_DIR="$SRC_DIR/data/vault/config"
-VAULT_DATA_DIR="$SRC_DIR/data/vault/file"
+# Vault config/data still live under srcs/data by default. If you have a different
+# layout you can set VAULT_CFG_DIR/VAULT_DATA_DIR env vars before running the script.
+VAULT_CFG_DIR="${VAULT_CFG_DIR:-$SRC_DIR/data/vault/config}"
+VAULT_DATA_DIR="${VAULT_DATA_DIR:-$SRC_DIR/data/vault/file}"
 VAULT_HCL="$VAULT_CFG_DIR/vault.hcl"
 
 # ---------- Helpers ----------
@@ -49,7 +65,16 @@ echo "==> Preparing local folders under srcs/ ..."
 
 mkdir -p "$LOGS_NGX_DIR" "$LOGS_MODSEC_DIR" "$SECRETS_VAULT_DIR" "$SECRETS_APPROLE_DIR" \
          "$VAULT_CFG_DIR" "$VAULT_DATA_DIR" "$CERTS_DIR"
-mkdir -p "$BASE_DIR/frontend/dist"
+
+# Create frontend/dist only in the real frontend folder. Some setups put the
+# frontend at repo root (`$BASE_DIR/frontend`) while others may have it under
+# `srcs/frontend`. Create `dist` only where a `frontend` directory exists to
+# avoid creating an unwanted `srcs/frontend` folder.
+if [ -d "$BASE_DIR/frontend" ]; then
+  mkdir -p "$BASE_DIR/frontend/dist"
+elif [ -d "$SRC_DIR/frontend" ]; then
+  mkdir -p "$SRC_DIR/frontend/dist"
+fi
 
 chmod -R 775 "$SRC_DIR/logs" || true
 
