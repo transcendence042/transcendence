@@ -1,18 +1,17 @@
 import { ComponentContext } from "../Context/ComponentsContext"
 import { AuthContext } from "../Context/AuthContext"
-import { useContext, useEffect, useState } from "react"
-import { FaLess } from "react-icons/fa";
+import { useContext, useEffect, useRef, useState } from "react"
+import { TournamentContext } from "../Context/TournamentContext";
 
 
 export const Tournaments = () => {
     const {socket} = useContext(ComponentContext);
     const {user} = useContext(AuthContext);
     const [lobbyState, setLobbyState] = useState([]);
-    const [currentTournament, setCurrentTournament] = useState(null);
     const [createTournamentLog, setCreateTournamentLog] = useState(false)
     const [tournamentNameState, setTournamentNameState] = useState(`${user?.username || ''}'s tournament`)
     const [numOfPlayerState, setNumOfPlayerState] = useState('');
-    const [tournamentReady, setTournamentReady] = useState(false);
+    const {tournamentReady, currentTournament} = useContext(TournamentContext);
     
     useEffect( () => {
 
@@ -22,22 +21,10 @@ export const Tournaments = () => {
             console.log(`tournamentLobbies is: ${lobbyState.length}`)
         }
 
-        const handleCurrentTournament = (tournament) => {
-            setCurrentTournament(currentTournament => tournament);
-        }
-
-        const handleStartTournament = (tournamentInfoObject) => {
-            setTournamentReady(tournamentInfoObject.started);
-        }
-
         socket.emit("CheckTournamentLobbies");
         socket.on("tournamentLobbyInfo", handleTournamentsLobbies)
-        socket.on("getCurrentTournament", handleCurrentTournament);
-        socket.on("startTournament", handleStartTournament)
         return () => {
             socket.off("tournamentLobbyInfo", handleTournamentsLobbies)
-            socket.off("getCurrentTournament", handleCurrentTournament);
-            socket.off("startTournament", handleStartTournament)
         }
     }, [socket])
 
@@ -163,24 +150,27 @@ export const Tournaments = () => {
 }
 
 const TournamentGame = ({currentTournament}) => {
-    const [startTournamentButton, setStartTournamentButton] = useState(false);
+    const {user} = useContext(AuthContext)
+    const {socket} = useContext(ComponentContext);
+    const [startTournamentButton, setStartTournamentButton] = useState(true);
+    const {timer, tournamentJustStarted} = useContext(TournamentContext);
+
+
+    const limitTime = 5;
+
     return (
         <div className="text-white">
             {
-                startTournamentButton ?
-                <div>
-                    <button onClick={() => setStartTournamentButton(false)}>StartTournament</button>
-                </div>
-                :
+                (!tournamentJustStarted && startTournamentButton && timer <= limitTime) ?
                 <div className="grid grid-cols-2">
                 {
+                    currentTournament ?
                     Array.from({ length: currentTournament.numberOfPlayers / 2 }).map((_, pairIndex) => {
                         const leftPlayer = currentTournament.players[pairIndex * 2];
                         const rightPlayer = currentTournament.players[pairIndex * 2 + 1];
                         return (
                             <div key={pairIndex} className="flex items-center justify-center gap-6 mb-6 col-span-2">
-                                {/* Left Player Card */}
-                                {leftPlayer ? (
+                                {leftPlayer && (
                                     <div className={`bg-slate-900 border ${leftPlayer.host ? 'border-cyan-400' : 'border-emerald-500/30'} rounded-lg p-4 flex flex-col items-center shadow hover:shadow-cyan-500/20 transition-all relative w-40`}>
                                         <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-2 ${leftPlayer.host ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white border-2 border-cyan-400 shadow-lg' : 'bg-slate-800 text-white'}`}>
                                             {leftPlayer.username[0]?.toUpperCase()}
@@ -192,16 +182,9 @@ const TournamentGame = ({currentTournament}) => {
                                             </div>
                                         )}
                                     </div>
-                                ) : (
-                                    <div className="bg-slate-800 border border-gray-700 rounded-lg p-4 flex flex-col items-center justify-center text-gray-400 shadow w-40">
-                                        <span className="text-2xl">🪑</span>
-                                        <span className="mt-2">Available Seat</span>
-                                    </div>
                                 )}
-                                {/* VS Indicator */}
                                 <span className="text-3xl font-bold text-cyan-400 mx-2 select-none">VS</span>
-                                {/* Right Player Card */}
-                                {rightPlayer ? (
+                                {rightPlayer && (
                                     <div className={`bg-slate-900 border ${rightPlayer.host ? 'border-cyan-400' : 'border-emerald-500/30'} rounded-lg p-4 flex flex-col items-center shadow hover:shadow-cyan-500/20 transition-all relative w-40`}>
                                         <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-2 ${rightPlayer.host ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white border-2 border-cyan-400 shadow-lg' : 'bg-slate-800 text-white'}`}>
                                             {rightPlayer.username[0]?.toUpperCase()}
@@ -213,16 +196,20 @@ const TournamentGame = ({currentTournament}) => {
                                             </div>
                                         )}
                                     </div>
-                                ) : (
-                                    <div className="bg-slate-800 border border-gray-700 rounded-lg p-4 flex flex-col items-center justify-center text-gray-400 shadow w-40">
-                                        <span className="text-2xl">🪑</span>
-                                        <span className="mt-2">Available Seat</span>
-                                    </div>
                                 )}
                             </div>
                         );
                     })
+                    :
+                    <div className="text-white">CURRENT TOURNAMNET IS NULLdasdasdasdasdasdsadasdadadsasdasdasdasdasdasdasdsadsadadsasdasd</div>
                 }
+                {
+                    !currentTournament && <div className="text-white">CURRENT TOURNAMNET IS NULLdasdasdasdasdasdsadasdadadsasdasdasdasdasdasdasdsadsadadsasdasd</div>
+                }
+                </div>
+                :
+                <div className="text-white">
+                    NOW THE GAME OFICIALLY STARTS!!!!!!!!
                 </div>
             }
         </div>

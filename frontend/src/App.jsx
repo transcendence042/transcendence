@@ -20,6 +20,7 @@ import FriendRequest from './Components/FriendsRequest'
 import Login from './Components/Login'
 
 import './index.css'
+import { TournamentContextProvider } from './Context/TournamentContext'
 
 const Components = () => {
 
@@ -313,7 +314,9 @@ function MainComponent() {
       <Route path='/index/*' element={
         <ProtectorOfThings>
           <ComponentContextProvider>
-            <Components/>
+            <TournamentContextProvider>
+              <Components/>
+            </TournamentContextProvider>
           </ComponentContextProvider>
         </ProtectorOfThings>
       }

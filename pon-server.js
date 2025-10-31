@@ -111,6 +111,9 @@ var roomPlayersAreIn = {};
 
 //tournaments
 var tournaments = {};
+var tournamentGames = 
+
+setInterval
 
 //The shift() method returns and removes the first element in the array
 function createRoomId() {
@@ -327,7 +330,7 @@ io.on("connection", (socket) => {
         tournaments[tournamentId].players.push({userId: socket.user.id, username: socket.user.username, host: true})
         socket.join(tournamentId);
         console.log(`the ${uniqueName} TOURNAMENT has been created`)
-        io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id));
+        io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(tournamentId));
     })
 
     socket.on("removePlayerFromTournament", (playerId, tournamentId) => {
@@ -354,7 +357,17 @@ io.on("connection", (socket) => {
 
 
     socket.on("CheckTournamentLobbies", () => {
-        io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(socket.user.id));
+        let playerId = socket.user.id;
+        for (let tournamentId in tournaments) {
+            const players = tournaments[tournamentId].players;
+            const checkIfPlayerIsIn = players.some(p => p.userId === socket.user.id);
+            if (checkIfPlayerIsIn) {
+                console.log(`The player with the name of: "${socket.user.username}" belongs to the "${tournaments[tournamentId].name}" tournament!`)
+                playerId =  tournamentId;
+                break ;
+            }
+        }
+        io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(playerId));
     })
 
     socket.on("joinTournament", (tournamentId, tournamentName, userId) => {
@@ -377,6 +390,25 @@ io.on("connection", (socket) => {
             io.to(tournamentId).emit("startTournament", {tournamentId, started: true})
         }
     })
+
+    socket.on("startTournamentNow", (tournamentId) => {
+        const tournament = tournaments[tournamentId];
+        if (!tournament) return ;
+        io.to(tournamentId).emit("tournamentJustStarted", tournament)
+        tournament.players()
+    })
+
+    const joinTournaments = () => {
+        for (let id in tournaments) {
+            const checkIfBelongsInTournament = tournaments[id].players.some(p => p.userId === socket.user.id);
+            if (checkIfBelongsInTournament) {
+                socket.join(id);
+                break;
+            }
+        }
+    }
+
+    joinTournaments();
 
 
 
@@ -725,12 +757,12 @@ async function updateGame(gameState, roomId) {
     if (gameState.ball.x < 0) { 
         gameState.player2.score++; 
         resetBall(gameState);
-        if (gameState.player2.score >= 20) gameEnded = true;
+        if (gameState.player2.score >= 5) gameEnded = true;
     }
     else if (gameState.ball.x > 800) { 
         gameState.player1.score++; 
         resetBall(gameState);
-        if (gameState.player1.score >= 20) gameEnded = true;
+        if (gameState.player1.score >= 5) gameEnded = true;
     }
 
     // Save match when game ends
