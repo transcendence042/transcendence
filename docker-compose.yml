@@ -10,7 +10,7 @@ services:
     networks:
       - transcendence
     volumes:
-      - ./srcs/frontend:/usr/share/nginx/html:ro
+      - ./frontend:/usr/share/nginx/html:ro
       - ./srcs/scripts:/scripts:ro
       - ./srcs/secrets:/app/secrets:ro
 
