@@ -1,0 +1,22 @@
+---0tdHDPo9---A--
+[31/Oct/2025:19:50:59 +0000] 176194025962.795776 172.19.0.1 38774 172.19.0.5 443
+---0tdHDPo9---B--
+GET /?q=malicious HTTP/2.0
+host: localhost:8443
+user-agent: curl/8.5.0
+accept: */*
+
+---0tdHDPo9---D--
+
+---0tdHDPo9---F--
+HTTP/2.0 400
+
+---0tdHDPo9---H--
+ModSecurity: Access denied with code 400 (phase 1). Matched "Operator `Rx' with parameter `^(?:localhost|frontend|api)$' against variable `REQUEST_HEADERS:host' (Value: `localhost:8443' ) [file "/etc/modsecurity.d/custom-rules/900600-block-xss-sqli.conf"] [line "3"] [id "900600"] [rev ""] [msg "Host header not allowed: localhost:8443"] [data ""] [severity "0"] [ver ""] [maturity "0"] [accuracy "0"] [hostname "localhost"] [uri "/"] [unique_id "176194025962.795776"] [ref "v33,14"]
+
+---0tdHDPo9---I--
+
+---0tdHDPo9---J--
+
+---0tdHDPo9---Z--
+
