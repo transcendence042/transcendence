@@ -1,9 +1,22 @@
-import { start } from 'repl';
 import { Sequelize, DataTypes } from 'sequelize';
+import path from 'path';
+import fs from 'fs';
+
+// Resolve DB storage: allow override with DB_PATH env var.
+// Default to `srcs/secrets/app.db` to keep compatibility with the old structure
+// (the file will be created if missing). If you want a different location,
+// set DB_PATH in your environment.
+const secretsDir = path.resolve(process.cwd(), 'srcs', 'secrets');
+if (!fs.existsSync(secretsDir)) {
+  fs.mkdirSync(secretsDir, { recursive: true });
+}
+
+const defaultStorage = path.resolve(secretsDir, 'app.db');
+const storage = process.env.DB_PATH || defaultStorage;
 
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: './backend/database.sqlite',
+  storage,
   logging: false
 });
 
@@ -102,7 +115,17 @@ User.hasMany(Match, { as: 'Player1Matches', foreignKey: 'player1Id' });
 User.hasMany(Match, { as: 'Player2Matches', foreignKey: 'player2Id' });
 
 // Initialize database
-export async function initializeDatabase() {
-  await sequelize.sync({ force: true }); // This will drop and recreate tables
-  console.log('✅ Database synced (tables recreated)');
+export async function initializeDatabase({ force = false, alter = true } = {}) {
+  // By default avoid dropping tables. Use force=true in dev/test when needed.
+  await sequelize.sync({ force, alter });
+  console.log('✅ Database synced', { force, alter, storage });
 }
+
+// Backwards-compatible default export for code that expects `import db from './db'`.
+export default {
+  sequelize,
+  User,
+  Friendship,
+  Match,
+  initializeDatabase,
+};
