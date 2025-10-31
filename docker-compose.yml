@@ -15,7 +15,7 @@ services:
       - ./srcs/secrets:/app/secrets:ro
 
   backend:
-      build: ./srcs/backend
+      build: ./backend
       container_name: backend
       restart: unless-stopped
       networks:
