@@ -4,8 +4,20 @@
 set -euo pipefail
 
 VAULT_ADDR="https://127.0.0.1:8200"
-ROOT_TOKEN_FILE="./srcs/secrets/vault/root_token"
-UNSEAL_KEY_FILE="./srcs/secrets/vault/unseal_key"
+
+# Detect repository layout for secrets (prefer repo-root ./secrets, fallback to ./srcs/secrets)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [ -n "${SECRETS_ROOT:-}" ]; then
+  SECRETS_ROOT="$SECRETS_ROOT"
+elif [ -d "$REPO_ROOT/secrets" ] || [ ! -d "$REPO_ROOT/srcs/secrets" ]; then
+  SECRETS_ROOT="$REPO_ROOT/secrets"
+else
+  SECRETS_ROOT="$REPO_ROOT/srcs/secrets"
+fi
+
+ROOT_TOKEN_FILE="$SECRETS_ROOT/vault/root_token"
+UNSEAL_KEY_FILE="$SECRETS_ROOT/vault/unseal_key"
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "❌ jq is required but not installed."

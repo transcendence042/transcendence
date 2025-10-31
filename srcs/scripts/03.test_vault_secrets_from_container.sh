@@ -4,12 +4,23 @@ set -e
 
 VAULT_ADDR="https://localhost:8200"
 
+# Detectar layout de secrets: preferir ./secrets en la raíz, sino usar ./srcs/secrets
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [ -n "${SECRETS_ROOT:-}" ]; then
+  SECRETS_ROOT="$SECRETS_ROOT"
+elif [ -d "$REPO_ROOT/secrets" ] || [ ! -d "$REPO_ROOT/srcs/secrets" ]; then
+  SECRETS_ROOT="$REPO_ROOT/secrets"
+else
+  SECRETS_ROOT="$REPO_ROOT/srcs/secrets"
+fi
+
 # Rutas locales
-ROLE_FILE="srcs/secrets/api-approle/role_id"
-SECRET_FILE="srcs/secrets/api-approle/secret_id"
-UNSEAL_KEY_FILE="srcs/secrets/vault/unseal_key"
-ROOT_TOKEN_FILE="srcs/secrets/vault/root_token"
-CERT_DIR="srcs/secrets/certs"
+ROLE_FILE="$SECRETS_ROOT/api-approle/role_id"
+SECRET_FILE="$SECRETS_ROOT/api-approle/secret_id"
+UNSEAL_KEY_FILE="$SECRETS_ROOT/vault/unseal_key"
+ROOT_TOKEN_FILE="$SECRETS_ROOT/vault/root_token"
+CERT_DIR="$SECRETS_ROOT/certs"
 
 # Verificar que los archivos necesarios existen
 for f in "$ROLE_FILE" "$SECRET_FILE" "$UNSEAL_KEY_FILE"; do
