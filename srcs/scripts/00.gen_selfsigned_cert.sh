@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# for WSL
 # filepath: /mnt/c/users/usuario/desktop/Transcendence/srcs/scripts/00.gen_selfsigned_cert.sh
 
 set -euo pipefail
