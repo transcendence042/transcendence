@@ -132,11 +132,14 @@ export async function login(req, reply) {
   })
 
   if (friends) {
-    const friendId = friends.map(friend => friend.userId === user.id ? friend.Friend.id : friend.User.id)
-    friendId.forEach(friend => {
-      console.log(`Sending im loggins to friend with the id :${friend}`)
-      req.server.io.to(friend).emit("friendConnected", {username: user.username, id: user.id})
-    })
+    const friendId = friends.map(friend => friend.userId === user.id ? friend.Friend.id : friend.User.id);
+    friendId.forEach(friendId => {
+      console.log(`Sending im loggins to friend with the id :${friendId}`);
+      const friendSocketId = req.server.onlineUsers.get(friendId);
+      if (friendSocketId) {
+        req.server.io.to(friendSocketId).emit("friendConnected", {username: user.username, id: user.id});
+      }
+    });
   }
   else
       console.log(`CURRENTLY NO FRIENDS FOR:${user.username}`)
@@ -144,53 +147,78 @@ export async function login(req, reply) {
 }
 
 export async function logout(req, reply) {
+  console.log(`🚪 Starting logout process for user: ${req.user.username} (ID: ${req.user.id})`);
+  
   const user = await User.findByPk(req.user.id);
   if (user) {
-    // Decrement session count
-    const newSessionCount = Math.max(0, (user.sessions || 0) - 1);
+    // CAMBIO: Siempre marcar como offline en logout, ignorar sistema de sesiones por ahora
+    console.log(`� Forcing user ${user.username} offline`);
     
     await user.update({ 
-      sessions: newSessionCount,
-      isOnline: newSessionCount > 0, // Only go offline if no sessions left
+      isOnline: false,  // FORZAR offline siempre
       lastSeen: new Date() 
     });
-  }
-  const friends = await Friendship.findAll({
-    where: {
-      [Op.and]: [
+    
+    // Forzar eliminación de onlineUsers
+    const wasInOnlineUsers = req.server.onlineUsers.has(user.id);
+    console.log(`� User ${user.username} was in onlineUsers: ${wasInOnlineUsers}`);
+    
+    if (wasInOnlineUsers) {
+      req.server.onlineUsers.delete(user.id);
+      console.log(`✅ User ${user.username} forcefully removed from onlineUsers`);
+    }
+    
+    // Obtener amigos y notificarles del logout
+    const friends = await Friendship.findAll({
+      where: {
+        [Op.and]: [
+          { status: 'accepted' },
+          {
+            [Op.or]: [
+              { userId: req.user.id },
+              { friendId: req.user.id }
+            ]
+          }
+        ]
+      },
+      include: [
         {
-          status: 'accepted'
+          model: User,
+          as: 'User',
+          attributes: ["id"]
         },
         {
-          [Op.or] :[
-            {userId: req.user.id},
-            {friendId: req.user.id}
-          ]
+          model: User,
+          as: 'Friend',
+          attributes: ["id"]
         }
       ]
+    });
+    
+    if (friends && friends.length > 0) {
+      const friendsId = friends.map(friend => (friend.userId === req.user.id ? friend.Friend.id : friend.User.id));
+      console.log(`📢 Notifying ${friendsId.length} friends that ${user.username} logged out`);
 
-    },
-    include: [
-      {
-        model: User,
-        as: 'User',
-        attributes: ["id"]
-      },
-      {
-        model: User,
-        as: 'Friend',
-        attributes: ["id"]
-      }
-    ]
-  })
-  if (friends) {
-    const friendsId = friends.map(friend => (friend.userId === req.user.id ? friend.Friend.id : friend.User.id));
-
-    friendsId.forEach(friend => {
-      console.log(`Im loging out my friend ID is ----------->>> ${friend}`);
-      req.server.io.to(friend).emit("friendLogout", {username: user.username, id: user.id})
-    })
+      friendsId.forEach(friendId => {
+        const friendSocketId = req.server.onlineUsers.get(friendId);
+        console.log(`📬 Friend ${friendId} socketId: ${friendSocketId}`);
+        
+        if (friendSocketId) {
+          console.log(`✅ HTTP LOGOUT: Emitting friendLogout to socketId: ${friendSocketId} for user: ${user.username}`);
+          req.server.io.to(friendSocketId).emit("friendLogout", {username: user.username, id: user.id});
+        } else {
+          console.log(`❌ Friend ${friendId} is not online, cannot emit event`);
+        }
+      });
+      
+      // TAMBIÉN: Emitir evento broadcast para asegurar que llegue
+      console.log(`📡 Broadcasting friendLogout for user: ${user.username}`);
+      req.server.io.emit("friendLogout", {username: user.username, id: user.id});
+    } else {
+      console.log(`📭 User ${user.username} has no friends to notify`);
+    }
   }
+  
   reply.send({ message: 'Logged out successfully' });
 }
 
@@ -318,9 +346,18 @@ export async function respondToFriendRequest(req, reply) {
 
       const me = await User.findByPk(req.user.id, {
         attributes: ['username', 'displayName']
-      })
-      if (me)
-        req.server.io.to(requestId).emit("acceptedFriendRequest", {friendUsername: me.username, friendDisplayName: me.displayName})
+      });
+      
+      if (me) {
+        // Emitir al usuario que envió la solicitud (friendship.userId), no al requestId
+        const requesterSocketId = req.server.onlineUsers.get(friendship.userId);
+        if (requesterSocketId) {
+          req.server.io.to(requesterSocketId).emit("acceptedFriendRequest", {
+            friendUsername: me.username, 
+            friendDisplayName: me.displayName
+          });
+        }
+      }
     } else {
       await friendship.destroy();
       reply.send({ message: 'Friend request rejected' });
@@ -358,6 +395,7 @@ export async function getFriendRequests(req, reply) {
 }
 
 export async function getFriends(req, reply) {
+  console.log(`👥 Getting friends for user: ${req.user.username} (ID: ${req.user.id})`);
   try {
     const friendships = await Friendship.findAll({
       where: {
@@ -382,11 +420,14 @@ export async function getFriends(req, reply) {
 
     const friends = friendships.map(friendship => {
       const friend = friendship.userId === req.user.id ? friendship.Friend : friendship.User;
-	  return {...friend.toJSON(), challenge: friendship.challenge};
+      console.log(`👤 Friend: ${friend.username} (ID: ${friend.id}) - isOnline: ${friend.isOnline}`);
+      return {...friend.toJSON(), challenge: friendship.challenge};
     });
 
+    console.log(`📋 Returning ${friends.length} friends for ${req.user.username}`);
     reply.send( {friends} );
   } catch (error) {
+    console.error('getFriends error:', error);
     reply.code(500).send({ error: 'Failed to fetch friends' });
   }
 }

@@ -14,7 +14,7 @@ interface ProfileData {
 }
 
 interface Friend {
-    id?: number;
+    id: number;
     username: string;
     displayName?: string;
     avatar?: string;
@@ -278,27 +278,54 @@ const Profile: React.FC = (): React.ReactElement => {
         if (!socket) return;
 
         const checkFriendLogOut = (data: any) => {
-            //alert(`friend -> ${data.username} with ID: ${data.id} just left!`)
-            loadFriends();
+            console.log(`🔴 LOGOUT EVENT RECEIVED:`, data);
+            console.log(`Friend ${data.username} with ID: ${data.id} logged out`);
+            // Actualizar el estado específico del amigo usando tanto ID como username para mayor robustez
+            setFriends(prevFriends => {
+                const updatedFriends = prevFriends.map(friend => 
+                    (friend.id === data.id || friend.username === data.username)
+                        ? { ...friend, isOnline: false }
+                        : friend
+                );
+                console.log(`✅ Updated friend ${data.username} to offline`);
+                return updatedFriends;
+            });
         };
         
         const checkFriendLogin = (data: any) => {
-            //alert(`Friend (${data.username}) with ID: ${data.id} has connected!`)
-            loadFriends();
+            console.log(`🟢 LOGIN EVENT RECEIVED:`, data);
+            console.log(`Friend ${data.username} with ID: ${data.id} logged in`);
+            // Actualizar el estado específico del amigo usando tanto ID como username para mayor robustez
+            setFriends(prevFriends => 
+                prevFriends.map(friend => 
+                    (friend.id === data.id || friend.username === data.username)
+                        ? { ...friend, isOnline: true }
+                        : friend
+                )
+            );
         };
 
         const handleAcceptedFriendRequest = (data: any) => {
             loadFriends();
         };
 
+        const handleFriendListUpdate = () => {
+            console.log('Friend list update requested');
+            loadFriends();
+        };
+
+        console.log(`👂 Setting up socket listeners for user profile`);
         socket.on("friendLogout", checkFriendLogOut);
         socket.on("friendConnected", checkFriendLogin);
         socket.on("acceptedFriendRequest", handleAcceptedFriendRequest);
+        socket.on("friendListUpdate", handleFriendListUpdate);
 
         return () => {
+            console.log(`🔇 Cleaning up socket listeners for user profile`);
             socket.off("friendLogout", checkFriendLogOut);
             socket.off("friendConnected", checkFriendLogin);
             socket.off("acceptedFriendRequest", handleAcceptedFriendRequest);
+            socket.off("friendListUpdate", handleFriendListUpdate);
         };
 
     }, [socket]);
@@ -445,10 +472,10 @@ const Profile: React.FC = (): React.ReactElement => {
                                                 alt={friend.username}
                                                 className='w-12 h-12 rounded-full border-2 border-slate-600 group-hover:border-amber-500/50 transition-all'
                                             />
-                                            <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-800 ${friend.isOnline ? 'bg-emerald-500' : 'bg-gray-600'}`}></span>
+                                            <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-800 ${friend.isOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
                                         </div>
                                         <span className='ml-4 font-medium text-white group-hover:text-amber-400 transition-colors'>{friend.username}</span>
-                                        <span className={`text-xs font-semibold px-3 py-1 rounded-full ml-auto ${friend.isOnline ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-gray-700/50 text-gray-400 border border-gray-600/30'}`}>
+                                        <span className={`text-xs font-semibold px-3 py-1 rounded-full ml-auto ${friend.isOnline ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
                                             {friend.isOnline ? getText('profileIsOnline') : getText('profileIsOffline')}
                                         </span>
                                     </div>

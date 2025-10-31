@@ -31,7 +31,8 @@ import {
   getMatchHistory, 
   changePassword,
 } from './auth.js';
-import { initializeDatabase, Match, User } from './db.js';
+import { initializeDatabase, Match, User, Friendship } from './db.js';
+import { Op } from 'sequelize';
 import { SocketAddress } from 'net';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -101,6 +102,33 @@ app.post('/api/user/friends/challengeRespond', { preHandler: authenticate }, res
 app.post('/api/user/friend-request', { preHandler: authenticate }, sendFriendRequest);
 app.post('/api/user/friend-response', { preHandler: authenticate }, respondToFriendRequest);
 app.get('/api/user/match-history', { preHandler: authenticate }, getMatchHistory);
+
+// Debug endpoint to check user status
+app.get('/api/debug/user-status/:userId', async (request, reply) => {
+  try {
+    const { userId } = request.params;
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'username', 'isOnline', 'sessions', 'lastSeen']
+    });
+    
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+    
+    const isInOnlineUsers = app.onlineUsers.has(parseInt(userId));
+    const socketId = app.onlineUsers.get(parseInt(userId));
+    
+    reply.send({
+      user: user.toJSON(),
+      isInOnlineUsers,
+      socketId,
+      onlineUsersCount: app.onlineUsers.size,
+      allOnlineUsers: Array.from(app.onlineUsers.keys())
+    });
+  } catch (error) {
+    reply.code(500).send({ error: 'Failed to get user status' });
+  }
+});
 
 // Create Socket.IO server
 const io = new Server(app.server, {
@@ -275,10 +303,13 @@ app.decorate('onlineUsers', new Map()); // userId -> socketId
 io.on("connection", (socket) => {
     console.log("🎮 Player connected:", socket.user.username, socket.user.id);
 
-     const userId = socket.user.id;
-     app.onlineUsers.set(userId, socket.id);
+    const userId = socket.user.id;
+    console.log(`📊 onlineUsers before adding user:`, Array.from(app.onlineUsers.keys()));
+    app.onlineUsers.set(userId, socket.id);
+    console.log(`✅ User ${socket.user.username} (${userId}) added to onlineUsers with socketId: ${socket.id}`);
+    console.log(`📊 onlineUsers after adding user:`, Array.from(app.onlineUsers.keys()));
 
-    // Join the user’s personal room (based on their ID)
+    // Join the user's personal room (based on their ID)
     socket.join(socket.user.id);
     socket.playerRoom = new Map();
 
@@ -569,12 +600,74 @@ io.on("connection", (socket) => {
     });
 
     // Handle disconnect
-    socket.on("disconnect", () => {
-        //onlineUsers.delete(userId);
+    socket.on("disconnect", async () => {
         console.log("❌ Player disconnected:", socket.user.username, socket.user.id);
-        //app.onlineUsers.delete(socket.user.id);
-        return;
-		const roomId = socket.roomId;
+        console.log(`📊 onlineUsers before deletion:`, Array.from(app.onlineUsers.keys()));
+        
+        // CRUCIAL: Marcar usuario como offline en la base de datos
+        try {
+            const user = await User.findByPk(socket.user.id);
+            if (user) {
+                await user.update({ 
+                    isOnline: false,
+                    lastSeen: new Date() 
+                });
+                console.log(`🔴 Marked user ${socket.user.username} as offline in database`);
+                
+                // Obtener amigos y notificarles del logout
+                const friends = await Friendship.findAll({
+                    where: {
+                        [Op.and]: [
+                            { status: 'accepted' },
+                            {
+                                [Op.or]: [
+                                    { userId: socket.user.id },
+                                    { friendId: socket.user.id }
+                                ]
+                            }
+                        ]
+                    },
+                    include: [
+                        {
+                            model: User,
+                            as: 'User',
+                            attributes: ["id"]
+                        },
+                        {
+                            model: User,
+                            as: 'Friend',
+                            attributes: ["id"]
+                        }
+                    ]
+                });
+                
+                if (friends && friends.length > 0) {
+                    const friendsId = friends.map(friend => (friend.userId === socket.user.id ? friend.Friend.id : friend.User.id));
+                    console.log(`📢 SOCKET DISCONNECT: Notifying ${friendsId.length} friends that ${socket.user.username} logged out`);
+                    
+                    friendsId.forEach(friendId => {
+                        const friendSocketId = app.onlineUsers.get(friendId);
+                        console.log(`📬 Friend ${friendId} socketId: ${friendSocketId}`);
+                        
+                        if (friendSocketId) {
+                            console.log(`✅ SOCKET DISCONNECT: Emitting friendLogout to socketId: ${friendSocketId} for user: ${socket.user.username}`);
+                            io.to(friendSocketId).emit("friendLogout", {username: socket.user.username, id: socket.user.id});
+                        } else {
+                            console.log(`❌ Friend ${friendId} is not online, cannot emit event`);
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error updating user offline status on disconnect:', error);
+        }
+        
+        // Remove user from onlineUsers when they disconnect
+        const wasDeleted = app.onlineUsers.delete(socket.user.id);
+        console.log(`🚪 User ${socket.user.username} (${socket.user.id}) ${wasDeleted ? 'successfully removed' : 'was not found'} in onlineUsers`);
+        console.log(`📊 onlineUsers after deletion:`, Array.from(app.onlineUsers.keys()));
+        
+        const roomId = socket.roomId;
 		if (!roomId || !gameRooms[roomId]) return;
 
 		const room = gameRooms[roomId];

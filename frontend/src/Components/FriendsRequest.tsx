@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../Context/AuthContext';
-import type { AuthContextType } from '../types';
+import { ComponentContext } from '../Context/ComponentsContext';
+import type { AuthContextType, ComponentContextType } from '../types';
 
 interface FriendRequestData {
     id: number;
@@ -13,12 +14,14 @@ interface FriendRequestData {
 const FriendRequest: React.FC = (): React.ReactElement => {
     const [friendRequests, setFriendRequests] = useState<FriendRequestData[]>([]);
     const authContext = useContext(AuthContext) as AuthContextType | undefined;
+    const componentContext = useContext(ComponentContext) as ComponentContextType | undefined;
     
     if (!authContext) {
         throw new Error('FriendRequest must be used within an AuthContextProvider');
     }
     
     const { token, language, lan } = authContext;
+    const { socket } = componentContext || {};
 
     // 🔧 FUNCIÓN HELPER PARA ACCESO SEGURO A LANGUAGE
     const getText = (key: string): string => {
@@ -100,6 +103,11 @@ const FriendRequest: React.FC = (): React.ReactElement => {
             if (res.ok) {
                 alert(`friend Request ${action} succesfully`);
                 showFriendRequests();
+                
+                // Si se acepta la solicitud, emitir evento para actualizar la lista de amigos
+                if (action === 'accept' && socket) {
+                    socket.emit('friendListUpdate');
+                }
             }
         } catch (err) {
             alert(`Responde friend Request failed: ${err}`)
