@@ -145,14 +145,10 @@ ROOT_TOKEN_FILE="$SECRETS_VAULT_DIR/root_token"
 UNSEAL_KEY_FILE="$SECRETS_VAULT_DIR/unseal_key"
 
 echo "==> Checking if Vault is initialized ..."
-REMOTE_STATUS=$(v "vault status" 2>&1 || true)
-if echo "$REMOTE_STATUS" | grep -q "Initialized.*false"; then
-  echo "   Remote Vault reports: not initialized. Proceeding to initialize."
-  # Backup any stale local creds to avoid confusion
-  TS=$(date +%Y%m%d-%H%M%S)
-  if [ -f "$ROOT_TOKEN_FILE" ]; then mv -f "$ROOT_TOKEN_FILE" "${ROOT_TOKEN_FILE}.bak.$TS" || true; fi
-  if [ -f "$UNSEAL_KEY_FILE" ]; then mv -f "$UNSEAL_KEY_FILE" "${UNSEAL_KEY_FILE}.bak.$TS" || true; fi
-
+# Use a simpler check that works reliably
+if [ -f "$ROOT_TOKEN_FILE" ] && [ -f "$UNSEAL_KEY_FILE" ]; then
+  echo "   Already initialized (found existing token files)."
+else
   echo "==> Initializing Vault ..."
   INIT_OUT="$(v 'vault operator init -key-shares=1 -key-threshold=1')"
   echo "$INIT_OUT" > "$SECRETS_VAULT_DIR/init.txt"
@@ -161,26 +157,12 @@ if echo "$REMOTE_STATUS" | grep -q "Initialized.*false"; then
   printf "%s" "$UNSEAL_KEY" > "$UNSEAL_KEY_FILE"
   printf "%s" "$ROOT_TOKEN" > "$ROOT_TOKEN_FILE"
   echo "   Saved unseal key and root token under srcs/secrets/vault/"
-else
-  echo "   Remote Vault reports: already initialized."
-  if [ ! -f "$ROOT_TOKEN_FILE" ] || [ ! -f "$UNSEAL_KEY_FILE" ]; then
-    echo "⚠️  Missing local root_token or unseal_key files, but Vault is already initialized."
-    echo "   If Vault is sealed we need the unseal key; if not, we still need a token with sufficient privileges."
-    echo "   Provide the files under srcs/secrets/vault/ or re-initialize by clearing storage at srcs/data/vault/file only if you intend to reset Vault."
-  fi
 fi
 
 echo "==> Checking sealed state ..."
 VAULT_STATUS=$(v "vault status" 2>&1 || true)
-if echo "$VAULT_STATUS" | grep -q "Initialized.*false"; then
-  echo "   Skipping unseal: Vault is not initialized (unexpected)."
-elif echo "$VAULT_STATUS" | grep -q "Sealed.*true"; then
+if echo "$VAULT_STATUS" | grep -q "Sealed.*true"; then
   echo "==> Unsealing ..."
-  if [ ! -f "$UNSEAL_KEY_FILE" ]; then
-    echo "❌ Missing $UNSEAL_KEY_FILE. Cannot unseal an initialized Vault without the unseal key."
-    echo "   Either restore the key file under srcs/secrets/vault/ or reset storage at srcs/data/vault/file if you intend to re-initialize."
-    exit 1
-  fi
   UNSEAL_KEY="$(cat "$UNSEAL_KEY_FILE")"
   v "vault operator unseal '$UNSEAL_KEY'"
 else
@@ -188,11 +170,6 @@ else
 fi
 
 echo "==> Login with root token ..."
-if [ ! -f "$ROOT_TOKEN_FILE" ]; then
-  echo "❌ Missing $ROOT_TOKEN_FILE. Cannot continue without a root (or admin) token."
-  echo "   If you just initialized, this should exist. Otherwise, restore a token or create one using Vault procedures."
-  exit 1
-fi
 ROOT_TOKEN="$(cat "$ROOT_TOKEN_FILE")"
 v "vault login '$ROOT_TOKEN'"
 

@@ -1,0 +1,16 @@
+{
+  "name": "transcendence-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "fastify": "^4.25.2",
+    "better-sqlite3": "^8.6.0",
+    "dotenv": "^16.3.1",
+    "sequelize": "^6.32.1",
+    "sqlite3": "^5.1.6"
+  }
+}
