@@ -4,7 +4,20 @@
 
 set -euo pipefail
 
-CERT_DIR="./srcs/secrets/certs"
+## Determine repository root and choose a cert directory.
+## Prefer ./secrets/certs at repo root, fall back to ./srcs/secrets/certs for
+## backward compatibility while migrating.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Allow override from environment if desired
+if [ -n "${SECRETS_CERT_DIR:-}" ]; then
+  CERT_DIR="$SECRETS_CERT_DIR"
+elif [ -d "$REPO_ROOT/secrets" ] || [ ! -d "$REPO_ROOT/srcs/secrets" ]; then
+  CERT_DIR="$REPO_ROOT/secrets/certs"
+else
+  CERT_DIR="$REPO_ROOT/srcs/secrets/certs"
+fi
 
 # Create the certificate directory if it doesn't exist
 mkdir -p "$CERT_DIR"
