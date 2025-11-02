@@ -409,7 +409,7 @@ io.on("connection", (socket) => {
         const tournament = tournaments[tournamentId];
         if (!tournament) return ;
         io.to(tournamentId).emit("tournamentJustStarted", tournament)
-        //await sleep(3000);
+        await sleep(10000);
         for (let i = 0; i < tournament.players.length; i += 2) {
             const p1 = tournament.players[i];
             const p2 = tournament.players[i + 1];

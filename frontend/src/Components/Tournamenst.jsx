@@ -149,82 +149,100 @@ export const Tournaments = () => {
     )
 }
 
-const TournamentGame = ({currentTournament}) => {
-    const {user} = useContext(AuthContext)
-    const {socket} = useContext(ComponentContext);
-    const [startTournamentButton, setStartTournamentButton] = useState(true);
-    const {tournamentJustStarted, tournamentGame} = useContext(TournamentContext);
-
+const TournamentGame = ({ currentTournament }) => {
+    const { user } = useContext(AuthContext);
+    const { socket } = useContext(ComponentContext);
+    const { tournamentJustStarted, tournamentGame } = useContext(TournamentContext);
 
     const closeTournamentGame = () => {
         socket.emit("closeTournamentGame", tournamentGame.id);
-    }
+    };
+
+    const renderPlayerCard = (player) => {
+        if (!player) return null;
+
+        const isHost = player.host === true;
+        const borderColor = isHost ? 'border-cyan-400' : 'border-emerald-500/30';
+        const avatarStyle = isHost 
+            ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white border-2 border-cyan-400 shadow-lg' 
+            : 'bg-slate-800 text-white';
+        const nameColor = isHost ? 'text-cyan-300' : 'text-white';
+
+        return (
+            <div className={`bg-slate-900 border ${borderColor} rounded-lg p-4 flex flex-col items-center shadow hover:shadow-cyan-500/20 transition-all relative w-40`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-2 ${avatarStyle}`}>
+                    {player.username[0]?.toUpperCase()}
+                </div>
+                <div className={`font-semibold ${nameColor}`}>
+                    {player.username}
+                </div>
+                {isHost && (
+                    <div className="absolute top-2 right-2">
+                        <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold px-2 py-1 rounded border border-cyan-400 shadow" title="Host">
+                            HOST
+                        </span>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderMatchups = () => {
+        if (!currentTournament) {
+            return (
+                <div className="text-white text-center">
+                    No tournament found
+                </div>
+            );
+        }
+
+        const numberOfPairs = currentTournament.numberOfPlayers / 2;
+
+        return (
+            <div className="grid grid-cols-2">
+                {Array.from({ length: numberOfPairs }).map((_, pairIndex) => {
+                    const leftPlayer = currentTournament.players[pairIndex * 2];
+                    const rightPlayer = currentTournament.players[pairIndex * 2 + 1];
+
+                    return (
+                        <div key={pairIndex} className="flex items-center justify-center gap-6 mb-6 col-span-2">
+                            {renderPlayerCard(leftPlayer)}
+                            <span className="text-3xl font-bold text-cyan-400 mx-2 select-none">
+                                VS
+                            </span>
+                            {renderPlayerCard(rightPlayer)}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
 
     return (
         <div className="text-white">
-            {
-                (!tournamentJustStarted && startTournamentButton) ?
-                <div className="grid grid-cols-2">
-                {
-                    currentTournament ?
-                    Array.from({ length: currentTournament.numberOfPlayers / 2 }).map((_, pairIndex) => {
-                        const leftPlayer = currentTournament.players[pairIndex * 2];
-                        const rightPlayer = currentTournament.players[pairIndex * 2 + 1];
-                        return (
-                            <div key={pairIndex} className="flex items-center justify-center gap-6 mb-6 col-span-2">
-                                {leftPlayer && (
-                                    <div className={`bg-slate-900 border ${leftPlayer.host ? 'border-cyan-400' : 'border-emerald-500/30'} rounded-lg p-4 flex flex-col items-center shadow hover:shadow-cyan-500/20 transition-all relative w-40`}>
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-2 ${leftPlayer.host ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white border-2 border-cyan-400 shadow-lg' : 'bg-slate-800 text-white'}`}>
-                                            {leftPlayer.username[0]?.toUpperCase()}
-                                        </div>
-                                        <div className={`font-semibold ${leftPlayer.host ? 'text-cyan-300' : 'text-white'}`}>{leftPlayer.username}</div>
-                                        {leftPlayer.host === true && (
-                                            <div className="absolute top-2 right-2 flex items-center gap-1">
-                                                <span className="inline-block bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold px-2 py-1 rounded border border-cyan-400 shadow" title="Host">HOST</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                <span className="text-3xl font-bold text-cyan-400 mx-2 select-none">VS</span>
-                                {rightPlayer && (
-                                    <div className={`bg-slate-900 border ${rightPlayer.host ? 'border-cyan-400' : 'border-emerald-500/30'} rounded-lg p-4 flex flex-col items-center shadow hover:shadow-cyan-500/20 transition-all relative w-40`}>
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-2 ${rightPlayer.host ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white border-2 border-cyan-400 shadow-lg' : 'bg-slate-800 text-white'}`}>
-                                            {rightPlayer.username[0]?.toUpperCase()}
-                                        </div>
-                                        <div className={`font-semibold ${rightPlayer.host ? 'text-cyan-300' : 'text-white'}`}>{rightPlayer.username}</div>
-                                        {rightPlayer.host === true && (
-                                            <div className="absolute top-2 right-2 flex items-center gap-1">
-                                                <span className="inline-block bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold px-2 py-1 rounded border border-cyan-400 shadow" title="Host">HOST</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })
-                    :
-                    <div className="text-white">CURRENT TOURNAMNET IS NULLdasdasdasdasdasdsadasdadadsasdasdasdasdasdasdasdsadsadadsasdasd</div>
-                }
-                {
-                    !currentTournament && <div className="text-white">CURRENT TOURNAMNET IS NULLdasdasdasdasdasdsadasdadadsasdasdasdasdasdasdasdsadsadadsasdasd</div>
-                }
+            {!tournamentJustStarted ? (
+                renderMatchups()
+            ) : (
+                <div className="text-white text-center text-xl">
+                    NOW THE GAME OFFICIALLY STARTS!!!!!!!!
                 </div>
-                :
-                <div className="text-white">
-                    NOW THE GAME OFICIALLY STARTS!!!!!!!!
-                </div>
-            }
-            {
-                tournamentGame &&
-                <div className="text-red-700">
-                    <button onClick={() => closeTournamentGame()} className="animate-pulse">
-                        <div>
-                            tournament Name: {tournamentGame.name}
+            )}
+
+            {tournamentGame && (
+                <div className="text-red-700 mt-4">
+                    <button 
+                        onClick={closeTournamentGame} 
+                        className="animate-pulse hover:text-red-500 transition-colors"
+                    >
+                        <div className="font-semibold">
+                            Tournament: {tournamentGame.name}
                         </div>
-                        <span>player1: {tournamentGame.player1?.username} vsvs player2: {tournamentGame.player2?.username}</span>
+                        <div className="text-sm">
+                            {tournamentGame.player1?.username} vs {tournamentGame.player2?.username}
+                        </div>
                     </button>
                 </div>
-            }
+            )}
         </div>
-    )
-}
+    );
+};
