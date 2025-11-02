@@ -153,15 +153,17 @@ const TournamentGame = ({currentTournament}) => {
     const {user} = useContext(AuthContext)
     const {socket} = useContext(ComponentContext);
     const [startTournamentButton, setStartTournamentButton] = useState(true);
-    const {timer, tournamentJustStarted} = useContext(TournamentContext);
+    const {tournamentJustStarted, tournamentGame} = useContext(TournamentContext);
 
 
-    const limitTime = 5;
+    const closeTournamentGame = () => {
+        socket.emit("closeTournamentGame", tournamentGame.id);
+    }
 
     return (
         <div className="text-white">
             {
-                (!tournamentJustStarted && startTournamentButton && timer <= limitTime) ?
+                (!tournamentJustStarted && startTournamentButton) ?
                 <div className="grid grid-cols-2">
                 {
                     currentTournament ?
@@ -210,6 +212,17 @@ const TournamentGame = ({currentTournament}) => {
                 :
                 <div className="text-white">
                     NOW THE GAME OFICIALLY STARTS!!!!!!!!
+                </div>
+            }
+            {
+                tournamentGame &&
+                <div className="text-red-700">
+                    <button onClick={() => closeTournamentGame()} className="animate-pulse">
+                        <div>
+                            tournament Name: {tournamentGame.name}
+                        </div>
+                        <span>player1: {tournamentGame.player1?.username} vsvs player2: {tournamentGame.player2?.username}</span>
+                    </button>
                 </div>
             }
         </div>

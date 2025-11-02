@@ -111,7 +111,7 @@ var roomPlayersAreIn = {};
 
 //tournaments
 var tournaments = {};
-var tournamentGames = 
+var tournamentGameRooms = {}; 
 
 setInterval
 
@@ -223,6 +223,20 @@ setInterval(async () => {
     }
 }, 1000/60);
 
+//Tournaments Games Interval
+setInterval(async () => {
+    for (let tournamentRoomId in tournamentGameRooms) {
+        const tournamentGameRoom = tournamentGameRooms[tournamentRoomId];
+        if (tournamentGameRoom.player1 && tournamentGameRoom.player2) {
+            io.to(tournamentRoomId).emit('tournamentGameUpdate', tournamentGameRoom);
+        }
+    }
+}, 1000)
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const checkPlayerIsInRoom = (players, roomId) => {
     return players.map(p => (roomId === roomPlayersAreIn[p.userId] ? p : null)).filter(p => p !== null);
 }
@@ -327,7 +341,7 @@ io.on("connection", (socket) => {
             matches: [],
             status: 'waiting' //waiting, ongoing, finished
         };
-        tournaments[tournamentId].players.push({userId: socket.user.id, username: socket.user.username, host: true})
+        tournaments[tournamentId].players.push({id: socket.id, userId: socket.user.id, username: socket.user.username, host: true})
         socket.join(tournamentId);
         console.log(`the ${uniqueName} TOURNAMENT has been created`)
         io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(tournamentId));
@@ -383,7 +397,7 @@ io.on("connection", (socket) => {
         if (checkIfFull) {console.log("Returning because the tournament is full");return;}
 
         socket.join(tournamentId);
-        tournament.players.push({userId: socket.user.id, username: socket.user.username, host: false})
+        tournament.players.push({id: socket.id, userId: socket.user.id, username: socket.user.username, host: false})
         //check is player is ready to start
         io.emit("tournamentLobbyInfo", getTournamentLobbyInfo(tournamentId));
         if (tournament.players.length === Number(tournament.numberOfPlayers)) {
@@ -391,11 +405,40 @@ io.on("connection", (socket) => {
         }
     })
 
-    socket.on("startTournamentNow", (tournamentId) => {
+    socket.on("startTournamentNow", async (tournamentId) => {
         const tournament = tournaments[tournamentId];
         if (!tournament) return ;
         io.to(tournamentId).emit("tournamentJustStarted", tournament)
-        tournament.players()
+        //await sleep(3000);
+        for (let i = 0; i < tournament.players.length; i += 2) {
+            const p1 = tournament.players[i];
+            const p2 = tournament.players[i + 1];
+            if (!p1 || !p2) continue;
+            const tournamentRoomId = '/' + p1.username + 'vs' + p2.username + '/';
+            
+            const p1Socket = io.sockets.sockets.get(p1.id);
+            const p2Socket = io.sockets.sockets.get(p2.id);
+
+            if (p1Socket) p1Socket.join(tournamentRoomId);
+            if (p2Socket) p2Socket.join(tournamentRoomId);
+
+            tournamentGameRooms[tournamentRoomId] = {
+                id: tournamentRoomId,
+                name: tournament.name,
+                tournamentGameState: createGameState(),
+                player1: p1,
+                player2: p2,
+                startTime: Date.now(),
+            }
+        }
+
+    })
+
+    socket.on("closeTournamentGame", (tournamentGameId) => {
+        const tournamentGameInfo = {};
+        delete tournamentGameRooms[tournamentGameId];
+        io.to(tournamentGameId).emit("tournamentGameFinish", tournamentGameInfo);
+        io.in(tournamentGameId).socketsLeave(tournamentGameId); // Make all sockets leave the room
     })
 
     const joinTournaments = () => {

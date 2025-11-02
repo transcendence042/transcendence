@@ -7,11 +7,22 @@ export const TournamentContext = createContext(null);
 export function TournamentContextProvider({children}) {
     const {socket} = useContext(ComponentContext)
     const {user} = useContext(AuthContext);
-    const [timer, setTimer] = useState(0);
-    const [currentTournament, setCurrentTournament] = useState(localStorage.getItem("currentTournament") || null);
-    const timerRef = useRef(null);
-    const [tournamentReady, setTournamentReady] = useState(localStorage.getItem("tournamentReady") || false);
-    const [tournamentJustStarted, setTournamentJustStarted] = useState(localStorage.getItem("tournamentJustStarted") || false)
+    
+    // ✅ Properly parse localStorage
+    const [currentTournament, setCurrentTournament] = useState(() => {
+        const stored = localStorage.getItem("currentTournament");
+        return stored ? JSON.parse(stored) : null;
+    });
+    
+    const [tournamentReady, setTournamentReady] = useState(() => {
+        return localStorage.getItem("tournamentReady") === "true";
+    });
+    
+    const [tournamentJustStarted, setTournamentJustStarted] = useState(() => {
+        return localStorage.getItem("tournamentJustStarted") === "true";
+    });
+    
+    const [tournamentGame, setTournamentGame] = useState(null);
 
     useEffect(() => {
         if (!socket || !user) return;
@@ -28,29 +39,44 @@ export function TournamentContextProvider({children}) {
             if (tournament && tournament.players) {
                 const isFull = tournament.players.length === Number(tournament.numberOfPlayers);
                 if (isFull) {
-                    localStorage.setItem("tournamentReady", true);
-                    localStorage.setItem("currentTournament", currentTournament);
+                    localStorage.setItem("tournamentReady", "true");
+                    localStorage.setItem("currentTournament", JSON.stringify(tournament)); // ✅ Use tournament, not currentTournament
                     setTournamentReady(true);
+                    socket.emit("startTournamentNow", tournament.id); // ✅ Use tournament, not currentTournament
                 }
             } else if (tournament === null) {
                 // Player left tournament or tournament doesn't exist
+                localStorage.removeItem("tournamentReady"); // ✅ Clean up
+                localStorage.removeItem("currentTournament"); // ✅ Clean up
                 setTournamentReady(false);
             }
         }
 
         const handleTournamentJustStarted = (tournament) => {
-            localStorage.setItem("tournamentJustStarted", true);
+            localStorage.setItem("tournamentJustStarted", "true");
             setTournamentJustStarted(true);
+        }
+
+        const handletournamentGameUpdate = (tournamentGameRoom) => {
+            setTournamentGame(tournamentGameRoom);
+        }
+
+        const handletournamentGameFinish = () => {
+            setTournamentGame(null);
         }
 
         socket.on("startTournament", handleStartTournament)
         socket.on("getCurrentTournament", handleCurrentTournament);
         socket.on("tournamentJustStarted", handleTournamentJustStarted)
+        socket.on("tournamentGameUpdate", handletournamentGameUpdate)
+        socket.on("tournamentGameFinish", handletournamentGameFinish)
 
         return () => {
             socket.off("startTournament", handleStartTournament)
             socket.off("getCurrentTournament", handleCurrentTournament)
             socket.off("tournamentJustStarted", handleTournamentJustStarted)
+            socket.off("tournamentGameUpdate", handletournamentGameUpdate)
+            socket.off("tournamentGameFinish", handletournamentGameFinish)
         }
     }, [socket, user])
 
@@ -62,33 +88,9 @@ export function TournamentContextProvider({children}) {
         }
     }, [currentTournament])
 
-    useEffect(() => {
-        if (tournamentReady && timer <= 5) {
-            if (timerRef.current) clearInterval(timerRef.current);
-            
-            timerRef.current = setInterval(() => {
-                setTimer(timer => timer + 1);
-            }, 1000)
-        }
-
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
-        }
-    }, [tournamentReady])
-
-    useEffect(() => {
-        if (timer > 30 && currentTournament && currentTournament.players) {
-            const checkIfPlayerIsHost = currentTournament.players.find(p => p?.userId === user.id)?.host
-            
-            if (checkIfPlayerIsHost) {
-                socket.emit("startTournamentNow", currentTournament.id);
-                console.log("You are the host!!")
-            }
-        }
-    }, [timer])
 
     return (
-        <TournamentContext.Provider value={{tournamentReady, setTournamentReady, timer, currentTournament, tournamentJustStarted}}>
+        <TournamentContext.Provider value={{tournamentReady, setTournamentReady, currentTournament, tournamentJustStarted, tournamentGame}}>
             {children}
         </TournamentContext.Provider>
     )
